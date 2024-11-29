@@ -6,7 +6,6 @@ import connect from "./config/connetDB.js";
 import authRoute from "./routes/authRoute.js";
 import errorHandler from "./middleware/errorHandler.js";
 import { okResponse } from "./utils/common.js";
-import crudRoute from "./routes/crudRoute.js";
 import cookieParser from "cookie-parser";
 
 // express app
@@ -22,8 +21,6 @@ app.use(express.json()); // parse request body as json
 
 // routes
 app.use("/auth", authRoute); // prefix routes
-app.use("/crud", crudRoute); // prefix routes
-
 
 // error handler
 app.use(errorHandler);

@@ -1,4 +1,4 @@
-import authModel from "../models/authModel.js";
+import authModel from "../models/userModel/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { authValidation } from "../validation/inputValidation.js";
