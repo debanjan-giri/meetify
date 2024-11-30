@@ -1,15 +1,15 @@
 import authModel from "../models/userModel/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { authValidation } from "../validation/inputValidation.js";
+import { authValidation } from "../../validation/inputValidation.js";
 
 import {
   errResponse,
   generateAccessToken,
   okResponse,
   generateRefreshToken,
-} from "../utils/common.js";
-import { createHash } from "../utils/common.js";
+} from "../../utils/common.js";
+import { createHash } from "../../utils/common.js";
 
 export const registerController = async (req, res, next) => {
   try {
