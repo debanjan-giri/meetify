@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const pollSchema = new Schema({
+const cronPollSchema = new Schema({
   // user
   creatorId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   creatorType: {
@@ -54,4 +54,4 @@ const pollSchema = new Schema({
 
 pollSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export default model("pollModel", pollSchema);
+export default model("cronPollModel", cronPollSchema);
