@@ -13,7 +13,7 @@ const submitSchema = new Schema({
   contentType: [
     {
       type: String,
-      enum: ["post", "story", "challenge"],
+      enum: ["post", "status", "challenge"],
       required: true,
     },
   ],

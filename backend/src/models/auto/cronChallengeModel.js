@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 const cronChallengeSchema = new Schema({
   // content
-  title: { type: String, required: true, default: "lunch with challenge " },
+  title: { type: String, required: true },
   description: { type: String },
   photoUrl: { type: String },
 
