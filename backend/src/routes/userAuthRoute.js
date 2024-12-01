@@ -3,24 +3,28 @@ import { Router } from "express";
 const userAuthRoute = Router();
 
 // all user
-userAuthRoute.post("/user/register"); // register user
-userAuthRoute.post("/user/login"); // login user
-userAuthRoute.post("/user/delete-account"); // delete account
-userAuthRoute.post("/user/refresh-token"); // token update
-userAuthRoute.post("/user/update-profile"); // update profile details
-userAuthRoute.get("/user/get-employee-list"); // get all employee list
+userAuthRoute.post("/user/register");
+userAuthRoute.post("/user/login");
+userAuthRoute.delete("/user/delete-account");
+userAuthRoute.post("/user/refresh-token");
+userAuthRoute.post("/user/update-profile");
+userAuthRoute.get("/user/get-employee-list");
+userAuthRoute.get("/user/mood-history");
 
 // employee
-userAuthRoute.post("/employee/send-connection"); // send employee connection
-userAuthRoute.post("/employee/accept-connection"); // accept employee connection
-userAuthRoute.post("/employee/remove-connection"); // remove employee connection
+userAuthRoute.get("/user/employee-details/:userId");
+userAuthRoute.post("/employee/send-connection");
+userAuthRoute.post("/employee/accept-connection");
+userAuthRoute.post("/employee/remove-connection");
+userAuthRoute.post("/employee/connection-list");
+userAuthRoute.post("/employee/connection-request-list");
 
 // admin
-userAuthRoute.get("/admin/update-user-role"); // update user type
-
-// admin or hr
-userAuthRoute.get("/:userType/block-user"); // block user
-userAuthRoute.get("/:userType/unblock-user"); // unblock user
-userAuthRoute.get("/:userType/reported-list"); // get reported list
+userAuthRoute.get("/:userType/update-user-role");
+userAuthRoute.post("/:userType/block-user");
+userAuthRoute.post("/:userType/unblock-user");
+userAuthRoute.post("/:userType/reported/:contentId");
+userAuthRoute.get("/:userType/get-reported-content");
+userAuthRoute.post("/:userType/content-removed");
 
 export default userAuthRoute;
