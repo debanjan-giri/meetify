@@ -3,6 +3,7 @@ import baseHashTagModel from "./baseHashTagModel";
 
 const hashTagPostSchema = new Schema({
   title: { type: String, required: true },
+  description: { type: String },
   photoUrl: { type: String },
   likeCount: { type: Number, default: 0 },
   likedById: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],

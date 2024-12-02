@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-import { errResponse, isValidId } from "../utils/common.js";
+import { errResponse } from "../utils/common.js";
 import authModel from "../models/authModel.js";
+import mongoose from "mongoose";
 
 export const accessTokenValidation = async (req, res, next) => {
   try {
@@ -29,12 +30,9 @@ export const accessTokenValidation = async (req, res, next) => {
         return errResponse(next, message, 401);
       }
 
-      // Extract user ID from the decoded token
       const userId = decoded.id;
 
-      const isValid = isValidId(userId);
-
-      if (!!isValid && !userId) {
+      if (!mongoose.Types.ObjectId.isValid(userId) && !userId) {
         return errResponse(next, "User ID not found", 401);
       }
 
@@ -44,8 +42,12 @@ export const accessTokenValidation = async (req, res, next) => {
         return errResponse(next, "User not found in database", 404);
       }
 
+      // check user access
+      if (!user?.userAccess)
+        return errResponse(next, "User access is disabled", 401);
+
       // Attach user data to request for further use
-      req.Token = { id: user?._id };
+      req.Token = { id: user?._id, userType: user?.userType };
       next();
     });
   } catch (error) {

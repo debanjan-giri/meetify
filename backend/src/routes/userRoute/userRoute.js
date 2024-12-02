@@ -1,18 +1,19 @@
 import { Router } from "express";
-
+import { upateDetailsController } from "../../controllers/userController/userController";
+ 
 const userRoute = Router();
 
-userRoute.post("/user/update-profile");
-userRoute.get("/user/get-employee-list");
+userRoute.post("/user/update-details", upateDetailsController);
+userRoute.get("/user/get-user-list");
 userRoute.get("/user/mood-history");
-
+ 
 // employee
 userRoute.get("/user/employee-details/:userId");
 userRoute.post("/employee/send-connection");
 userRoute.post("/employee/accept-connection");
+userRoute.get("/employee/request-connection");
 userRoute.post("/employee/remove-connection");
 userRoute.post("/employee/connection-list");
-userRoute.post("/employee/connection-request-list");
 
 // admin
 userRoute.get("/:userType/update-user-role");
