@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
-import { errResponse } from "../utils/common.js";
+import { errResponse, isValidId } from "../utils/common.js";
 import authModel from "../models/authModel.js";
 
 export const accessTokenValidation = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const authHeader = req?.headers?.authorization;
 
     // Check for Bearer token in the Authorization header
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!authHeader || !authHeader.startsWith("Bearer")) {
       return errResponse(next, "Authorization token missing", 401);
     }
 
@@ -32,6 +32,12 @@ export const accessTokenValidation = async (req, res, next) => {
       // Extract user ID from the decoded token
       const userId = decoded.id;
 
+      const isValid = isValidId(userId);
+
+      if (!!isValid && !userId) {
+        return errResponse(next, "User ID not found", 401);
+      }
+
       // Check if user exists in the database
       const user = await authModel.findById(userId).select("_id mobile");
       if (!user) {
@@ -39,7 +45,7 @@ export const accessTokenValidation = async (req, res, next) => {
       }
 
       // Attach user data to request for further use
-      req.Token = { id: user._id, mobile: user.mobile };
+      req.Token = { id: user?._id };
       next();
     });
   } catch (error) {

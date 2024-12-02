@@ -28,6 +28,44 @@ export const okResponse = (res, message = "", responseData = {}) => {
   });
 };
 
+// validation related functions
+export const isValidId = (id) => {
+  if (!id || typeof id !== "string") {
+    return false;
+  } else if (!mongoose.Types.ObjectId.isValid(id)) {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+// export const inputValidation = (req, next, validateSchema, obj) => {
+//   const objSchema = { ...validateSchema, obj };
+//   const { error, value } = objSchema.validate(req.body, {
+//     abortEarly: false,
+//     allowUnknown: false,
+//   });
+//   if (error) {
+//     return errResponse(next, error?.details[0]?.message, 400);
+//   } else {
+//     return value;
+//   }
+// };
+
+export const inputValidation = (req, next, validateSchema, obj) => {
+  const { error, value } = validateSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false,
+    context: obj, // Pass the flags here
+  });
+
+  if (error) {
+    return errResponse(next, error?.details[0]?.message, 400);
+  } else {
+    return value;
+  }
+};
+
 // token related functions
 const createToken = (next, user, secretKey, expiry) => {
   try {
@@ -74,15 +112,4 @@ export const generateRefreshToken = (res, next, user) => {
     console.error("Error generating refresh token:", error);
     return next(error);
   }
-};
-
-export const validateId = (id, next) => {
-  if (!id || typeof id !== "string") {
-    return errResponse(next, "ID must be a non-empty string", 400);
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return errResponse(next, "Invalid ID format", 400);
-  }
-  return id;
 };

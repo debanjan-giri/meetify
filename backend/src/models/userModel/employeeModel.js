@@ -1,9 +1,9 @@
 import { Schema } from "mongoose";
-import baseUserModel from "./baseUserModel";
+import baseUserModel from "./base_User_Model.js";
 
 const employeeSchema = new Schema({
   dateOfBirth: { type: String },
-  company: { type: String, required: true },
+  company: { type: String },
   designation: { type: String },
   bio: { type: String },
   skills: [String],

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import connect from "./config/connetDB.js";
-import authRoute from "./routes/authRoute.js";
+import authRoute from "./routes/userRoute/authRoute.js";
 import errorHandler from "./middleware/errorHandler.js";
 import { okResponse } from "./utils/common.js";
 import cookieParser from "cookie-parser";

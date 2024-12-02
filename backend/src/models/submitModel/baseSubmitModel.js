@@ -2,7 +2,11 @@ import { Schema, model } from "mongoose";
 
 const baseSubmitSchema = new Schema(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "baseUserModel", required: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "baseUserModel",
+      required: true,
+    },
     userType: {
       type: String,
       enum: ["hr", "employee", "admin"],
@@ -34,6 +38,7 @@ const baseSubmitSchema = new Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    hashTagId: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },
     privacy: {
       type: String,
       enum: ["public", "friends", "selected"],

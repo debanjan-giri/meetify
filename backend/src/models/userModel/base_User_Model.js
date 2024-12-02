@@ -6,6 +6,7 @@ const baseUserSchema = new Schema(
       type: String,
       enum: ["employee", "hr", "admin"],
       required: true,
+      default: "employee",
     },
     userAccess: { type: Boolean, default: true },
     name: { type: String },

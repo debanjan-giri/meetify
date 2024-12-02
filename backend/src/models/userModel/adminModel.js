@@ -1,10 +1,10 @@
 import { Schema } from "mongoose";
-import baseUserModel from "./baseUserModel";
+import baseUserModel from "./base_User_Model.js";
 
 const adminSchema = new Schema({
-  hrId: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  adminId: [{ type: Schema.Types.ObjectId, ref: "User" }],
-  employeeId: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  hrId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+  adminId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+  employeeId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   reportedDetails: [
     {
       dataId: { type: Schema.Types.ObjectId, ref: "baseSubmitModel" },
