@@ -10,7 +10,13 @@ const baseUserSchema = new Schema(
     },
     userAccess: { type: Boolean, default: true, required: true },
     name: { type: String },
-    email: { type: String, required: true, trim: true, lowercase: true },
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      unique: true,
+    },
     password: { type: String, required: true, trim: true },
     photoUrl: { type: String },
     dateOfBirth: { type: String },
@@ -21,8 +27,19 @@ const baseUserSchema = new Schema(
     hashTagId: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
     postsId: [{ type: Schema.Types.ObjectId, ref: "baseSubmitModel" }],
   },
-  { discriminatorKey: "userType", timestamps: true }
+  {
+    discriminatorKey: "userType",
+    timestamps: true,
+    toJSON: { transform: omitSensitiveFields },
+    toObject: { transform: omitSensitiveFields },
+  }
 );
 
 const baseUserModel = model("baseUserModel", baseUserSchema);
 export default baseUserModel;
+
+function omitSensitiveFields(doc, ret) {
+  delete ret.password;
+  delete ret.__v;
+  return ret;
+}

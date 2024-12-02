@@ -1,16 +1,23 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { registerValidation } from "../../validation/validationSchema.js";
+import mongoose from "mongoose";
+import {
+  loginValidation,
+  registerValidation,
+} from "../../validation/validationSchema.js";
+
+import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 
 import {
-  errResponse,
   generateAccessToken,
-  okResponse,
   generateRefreshToken,
-  inputValidation,
-} from "../../utils/common.js";
-import { createHash } from "../../utils/common.js";
+} from "../../utils/tokenRelated.js";
+
+import { createHash, inputValidation } from "../../utils/utilityFunction.js";
 import employeeModel from "../../models/userModel/employeeModel.js";
+import baseUserModel from "../../models/userModel/baseUserModel.js";
+import hrModel from "../../models/userModel/hrModel.js";
+import adminModel from "../../models/userModel/adminModel.js";
 
 export const registerController = async (req, res, next) => {
   try {
@@ -50,7 +57,12 @@ export const registerController = async (req, res, next) => {
     }
 
     // Success response
-    return okResponse(res, "User registered successfully", newUser);
+    return okResponse(
+      res,
+      "User registered successfully",
+      newUser,
+      accesstoken
+    );
   } catch (error) {
     console.error(`Error in registerController : ${error.message}`);
     next(error); // Pass errors to global error handler
@@ -59,14 +71,14 @@ export const registerController = async (req, res, next) => {
 
 export const loginController = async (req, res, next) => {
   try {
-
     // Validate request data
-    const value = inputValidation(req, registerValidation);
+    const value = inputValidation(req, next, loginValidation);
 
     const { email, password } = value;
 
     // Check if user exists
-    const user = await employeeModel.findOne({ email });
+    const user = await baseUserModel.findOne({ email });
+
     if (!user)
       return errResponse(next, "Invalid email number or password", 401);
 
@@ -75,7 +87,7 @@ export const loginController = async (req, res, next) => {
       return errResponse(next, "User access is disabled", 401);
 
     // Compare the hashed password
-    const isPasswordMatch = await bcrypt.compare(password, user?.password);
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch)
       return errResponse(next, "Invalid email number or password", 401);
 
@@ -90,7 +102,7 @@ export const loginController = async (req, res, next) => {
     }
 
     // Return success response
-    return okResponse(res, "Login successful", user);
+    return okResponse(res, "Login successful", user, accesstoken);
   } catch (error) {
     console.error(`Error in loginController : ${error.message}`);
     next(error);
@@ -99,7 +111,8 @@ export const loginController = async (req, res, next) => {
 
 export const getAccessTokenController = async (req, res, next) => {
   try {
-    const refreshToken = req.cookies.refreshToken;
+    const key = process.env.REFRESH_COOKIES_SECRET;
+    const refreshToken = req?.cookies?.[key];
     if (!refreshToken) {
       return errResponse(next, "Refresh token not found", 401);
     }
@@ -126,9 +139,13 @@ export const getAccessTokenController = async (req, res, next) => {
         }
 
         // Find the user in the database
-        const user = await authModel.findById(decoded.id).select("_id");
+        const user = await baseUserModel.findById(decoded.id).select("_id");
         if (!user) {
           return errResponse(next, "User not found in database", 404);
+        }
+
+        if (!user?.userAccess) {
+          return errResponse(next, "User access is disabled", 401);
         }
 
         // Generate JWT token
@@ -162,6 +179,12 @@ export const deleteAccountController = async (req, res, next) => {
     // Delete user account
     const deletedUser = await employeeModel.findByIdAndDelete(id);
     if (!deletedUser) return errResponse(next, "Failed to delete account", 500);
+
+    // Clear refresh token cookie
+    res.clearCookie(process.env.REFRESH_COOKIES_SECRET, {
+      httpOnly: true,
+      secure: true,
+    });
 
     return okResponse(res, "Account deleted successfully", null);
   } catch (error) {

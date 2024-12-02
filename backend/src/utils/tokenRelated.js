@@ -1,48 +1,6 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 
-// password related functions
-export const createHash = async (password) => {
-  const saltRounds = 12;
-  return await bcrypt.hash(password, saltRounds);
-};
-
-// response related functions
-export const errResponse = (
-  next,
-  message = "Something went wrong",
-  statusCode = 203
-) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  error.clientError = true; // to differentiate between server and client errors
-  next(error);
-};
-
-export const okResponse = (res, message = "", responseData = {}) => {
-  return res.status(200).json({
-    success: true,
-    message: message,
-    data: responseData,
-  });
-};
-
-
-export const inputValidation = (req, next, validateSchema) => {
-  const { error, value } = validateSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
-
-  if (error) {
-    return errResponse(next, error?.details[0]?.message, 400);
-  } else {
-    return value;
-  }
-};
-
-// token related functions
 const createToken = (next, user, secretKey, expiry) => {
   try {
     const { id } = user;
@@ -78,7 +36,7 @@ export const generateRefreshToken = (res, next, user) => {
       process.env.REFRESH_TOKEN_SECRET,
       process.env.REFRESH_TOKEN_EXPIRY
     );
-    res.cookie("refreshToken", refreshtoken, {
+    res.cookie(process.env.REFRESH_COOKIES_SECRET, refreshtoken, {
       httpOnly: true,
       sameSite: "Strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,

@@ -5,8 +5,9 @@ import helmet from "helmet";
 import connect from "./config/connetDB.js";
 import authRoute from "./routes/userRoute/authRoute.js";
 import errorHandler from "./middleware/errorHandler.js";
-import { okResponse } from "./utils/common.js";
+import { okResponse } from "./utils/reqResRelated.js";
 import cookieParser from "cookie-parser";
+import userRoute from "./routes/userRoute/userRoute.js";
 
 // express app
 const app = express(); // create express app
@@ -19,8 +20,9 @@ app.use(cors()); // enable cors
 app.use(cookieParser());
 app.use(express.json()); // parse request body as json
 
-// routes
-app.use("/auth", authRoute); // prefix routes
+// prefix routes
+app.use("/auth", authRoute);
+app.use("/acc", userRoute);
 
 // error handler
 app.use(errorHandler);

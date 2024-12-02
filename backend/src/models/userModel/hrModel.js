@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import baseUserModel from "./base_User_Model.js";
+import baseUserModel from "./baseUserModel.js";
 
 const hrSchema = new Schema({
   hrId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],

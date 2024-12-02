@@ -1,14 +1,34 @@
 import { Router } from "express";
-import { upateDetailsController } from "../../controllers/userController/userController";
- 
+import {
+  getUserDetailsController,
+  suffledUserListController,
+  upateDetailsController,
+} from "../../controllers/userController/userController.js";
+import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
+
 const userRoute = Router();
 
-userRoute.post("/user/update-details", upateDetailsController);
-userRoute.get("/user/get-user-list");
-userRoute.get("/user/mood-history");
- 
+userRoute.post(
+  "/user/update-my-details",
+  accessTokenValidation,
+  upateDetailsController
+);
+
+userRoute.get(
+  "/user/get-my-details",
+  accessTokenValidation,
+  getUserDetailsController
+);
+
+userRoute.get(
+  "/get-suffled-user-list",
+  accessTokenValidation,
+  suffledUserListController
+);
+userRoute.get("/mood-history");
+
 // employee
-userRoute.get("/user/employee-details/:userId");
+userRoute.get("/employee-details/:userId");
 userRoute.post("/employee/send-connection");
 userRoute.post("/employee/accept-connection");
 userRoute.get("/employee/request-connection");

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { errResponse } from "../utils/common.js";
-import authModel from "../models/authModel.js";
+import { errResponse } from "../utils/reqResRelated.js";
 import mongoose from "mongoose";
+import baseUserModel from "../models/userModel/baseUserModel.js";
 
 export const accessTokenValidation = async (req, res, next) => {
   try {
@@ -37,7 +37,9 @@ export const accessTokenValidation = async (req, res, next) => {
       }
 
       // Check if user exists in the database
-      const user = await authModel.findById(userId).select("_id mobile");
+      const user = await baseUserModel
+        .findById(userId)
+        .select("_id userType userAccess");
       if (!user) {
         return errResponse(next, "User not found in database", 404);
       }
