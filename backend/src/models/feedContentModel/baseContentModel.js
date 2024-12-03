@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const baseSubmitSchema = new Schema(
+const baseContentSchema = new Schema(
   {
     userId: {
       type: Schema.Types.ObjectId,
@@ -56,6 +56,6 @@ const baseSubmitSchema = new Schema(
   }
 );
 
-const baseSubmitModel = model("baseSubmitModel", baseSubmitSchema);
+const baseContentModel = model("baseContentModel", baseContentSchema);
 
-export default baseSubmitModel;
+export default baseContentModel;

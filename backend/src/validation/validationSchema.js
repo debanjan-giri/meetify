@@ -32,3 +32,10 @@ export const updateDetailsValidation = Joi.object({
   skills,
   photoUrl,
 });
+
+export const textValidation = Joi.object({
+  type: Joi.string().required().messages({
+    "string.empty": "Type is required",
+    "any.required": "Type is required",
+  }),
+});

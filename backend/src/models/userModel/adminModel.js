@@ -7,7 +7,7 @@ const adminSchema = new Schema({
   employeeId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   reportedDetails: [
     {
-      dataId: { type: Schema.Types.ObjectId, ref: "baseSubmitModel" },
+      dataId: { type: Schema.Types.ObjectId, ref: "baseContentModel" },
       authorId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
       reportedById: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
     },

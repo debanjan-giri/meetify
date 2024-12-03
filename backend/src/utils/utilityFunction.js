@@ -22,11 +22,21 @@ export const inputValidation = (req, next, validateSchema) => {
 };
 
 export const isValidId = (next, id) => {
-  const sanitizedId = typeof id === "string" ? id.trim() : null;
+  if (typeof id !== "string" || !id.trim()) {
+    return errResponse(next, "Valid ID is required", 400);
+  }
+  if (!mongoose.Types.ObjectId.isValid(id.trim())) {
+    return errResponse(next, "Invalid ID format", 400);
+  }
+  return id.trim();
+};
 
-  if (!sanitizedId || !mongoose.Types.ObjectId.isValid(sanitizedId)) {
-    return errResponse(next, "Valid User ID is required", 400);
+export const checkUserType = (next, userType) => {
+  const validUserTypes = ["admin", "hr", "employee"];
+
+  if (typeof userType !== "string" || !userType.trim()) {
+    return errResponse(next, "Valid User Type is missing", 400);
   }
 
-  return sanitizedId;
+  return validUserTypes.includes(userType.trim());
 };

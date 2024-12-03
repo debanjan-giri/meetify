@@ -8,7 +8,7 @@ const hashtagListSchema = new Schema({
     trim: true,
     lowercase: true,
   },
-  SubmitedById: [{ type: Schema.Types.ObjectId, ref: "baseSubmitModel" }],
+  SubmitedById: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
   createdAt: { type: Date, default: Date.now },
   trendingScore: { type: Number, default: 0 },
   userId: { type: Schema.Types.ObjectId, ref: "baseUserModel", required: true },

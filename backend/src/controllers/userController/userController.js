@@ -2,8 +2,15 @@ import hrModel from "../../models/userModel/hrModel.js";
 import adminModel from "../../models/userModel/adminModel.js";
 import employeeModel from "../../models/userModel/employeeModel.js";
 
-import { updateDetailsValidation } from "../../validation/validationSchema.js";
-import { inputValidation, isValidId } from "../../utils/utilityFunction.js";
+import {
+  textValidation,
+  updateDetailsValidation,
+} from "../../validation/validationSchema.js";
+import {
+  checkUserType,
+  inputValidation,
+  isValidId,
+} from "../../utils/utilityFunction.js";
 import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 import baseUserModel from "../../models/userModel/baseUserModel.js";
 
@@ -11,12 +18,7 @@ import baseUserModel from "../../models/userModel/baseUserModel.js";
 export const upateDetailsController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const userType = req?.Token?.userType;
-
-    // Check if user is authenticated
-    if (!userId && !userType) {
-      return errResponse(next, "User not authenticated", 401);
-    }
+    const userType = checkUserType(next, req?.Token?.userType);
 
     // Validate request data
     const { name, bio, company, dateOfBirth, designation, skills, photoUrl } =
@@ -59,7 +61,7 @@ export const upateDetailsController = async (req, res, next) => {
 export const getUserDetailsController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const userType = req?.Token?.userType;
+    const userType = checkUserType(next, req?.Token?.userType);
 
     // Check if user is authenticated
     if (!userId && !userType) {
@@ -125,13 +127,10 @@ export const suffledUserListController = async (req, res, next) => {
 // get employee details by id
 export const getEmployeeDetailsController = async (req, res, next) => {
   try {
-    const { id } = req.body;
-    const userType = req?.Token?.userType;
+    const { employeeId } = req.body;
 
-    // check id is valid
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return errResponse(next, "Valid User ID is required", 400);
-    }
+    const eId = isValidId(employeeId);
+    const userType = checkUserType(next, req?.Token?.userType);
 
     // dynamic model
     const model =
@@ -142,7 +141,7 @@ export const getEmployeeDetailsController = async (req, res, next) => {
         : employeeModel;
 
     // get user details
-    const user = await model.findById(id);
+    const user = await model.findById(eId);
     if (!user) return errResponse(next, "User not found", 404);
 
     // send response
@@ -157,15 +156,17 @@ export const getEmployeeDetailsController = async (req, res, next) => {
 export const handleConnectionController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { connectionId, type } = req.body;
-    // Expecting "type" to be "send" or "accept"
+    const { type } = inputValidation(req, next, textValidation);
 
-    // Validate connectionId
-    const id = isValidId(next, connectionId);
-    if (!id) return;
+    // Validate the type
+    if (!type || !["send", "accept"].includes(type)) {
+      return errResponse(next, "Invalid type provided", 400);
+    }
+
+    const connectionId = isValidId(next, req?.body?.connectionId);
 
     // Check if the user to connect with exists
-    const connection = await baseUserModel.findById(id);
+    const connection = await baseUserModel.findById(connectionId);
     if (!connection) return errResponse(next, "User ID not found", 404);
 
     let updateUser;
@@ -174,7 +175,7 @@ export const handleConnectionController = async (req, res, next) => {
       // Handle sending the connection request
       updateUser = await baseUserModel.findByIdAndUpdate(
         userId,
-        { $addToSet: { requestId: id } },
+        { $addToSet: { requestId: connectionId } },
         { new: true }
       );
       if (!updateUser)
@@ -189,7 +190,10 @@ export const handleConnectionController = async (req, res, next) => {
       // Handle accepting the connection request
       updateUser = await baseUserModel.findByIdAndUpdate(
         userId,
-        { $addToSet: { connectionId: id }, $pull: { requestId: id } },
+        {
+          $addToSet: { connectionId: connectionId },
+          $pull: { requestId: connectionId },
+        },
         { new: true }
       );
       if (!updateUser)
@@ -201,7 +205,7 @@ export const handleConnectionController = async (req, res, next) => {
         updateUser
       );
     } else {
-      return errResponse(next, "Invalid request type", 400); // Handle invalid type
+      return errResponse(next, "Invalid request type", 400);
     }
   } catch (error) {
     console.error(`Error in handleConnectionController: ${error.message}`);
@@ -213,35 +217,40 @@ export const handleConnectionController = async (req, res, next) => {
 export const removeConnectionController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { connectionId, removeType } = req.body;
+    const { type } = inputValidation(req, next, textValidation);
+
+    // Validate the type
+    if (!type || !["fdrm", "rm"].includes(type)) {
+      return errResponse(next, "Invalid type provided", 400);
+    }
 
     // Validate and sanitize the connectionId
-    const id = isValidId(next, connectionId);
-    if (!id) return;
+    const connectionId = isValidId(next, req.body.connectionId);
+    if (!connectionId) return;
 
     // Check if the user (connection) exists
-    const user = await baseUserModel.findById(id);
+    const user = await baseUserModel.findById(connectionId);
     if (!user) return errResponse(next, "User ID not found", 404);
 
-    // Conditional removal based on removeType
+    // Conditional removal based on type
     let updatedUser;
 
-    if (removeType === "fdrm") {
+    if (type === "fdrm") {
       // Remove from connectionId list
       updatedUser = await baseUserModel.findByIdAndUpdate(
         userId,
-        { $pull: { connectionId: id } }, // Remove from connectionId
+        { $pull: { connectionId: connectionId } }, // Remove from connectionId
         { new: true }
       );
-    } else if (removeType === "rm") {
+    } else if (type === "rm") {
       // Remove from requestId list
       updatedUser = await baseUserModel.findByIdAndUpdate(
         userId,
-        { $pull: { requestId: id } }, // Remove from requestId
+        { $pull: { requestId: connectionId } }, // Remove from requestId
         { new: true }
       );
     } else {
-      return errResponse(next, "Invalid removeType", 400); // Handle invalid removeType
+      return errResponse(next, "Invalid Type", 400); // Handle invalid type
     }
 
     if (!updatedUser) {
@@ -251,9 +260,7 @@ export const removeConnectionController = async (req, res, next) => {
     // Send success response
     return okResponse(
       res,
-      `${
-        removeType === "fdrm" ? "Connection" : "Request"
-      } removed successfully`,
+      `${type === "fdrm" ? "Connection" : "Request"} removed successfully`,
       updatedUser
     );
   } catch (error) {
@@ -266,7 +273,7 @@ export const removeConnectionController = async (req, res, next) => {
 export const connectionListController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { type } = req.body; // type can be "request" or "connection"
+    const { type } = inputValidation(req, next, textValidation);
 
     // Validate the type
     if (!type || !["request", "connection"].includes(type)) {

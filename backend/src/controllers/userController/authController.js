@@ -13,7 +13,7 @@ import {
   generateRefreshToken,
 } from "../../utils/tokenRelated.js";
 
-import { createHash, inputValidation } from "../../utils/utilityFunction.js";
+import { createHash, inputValidation, isValidId } from "../../utils/utilityFunction.js";
 import employeeModel from "../../models/userModel/employeeModel.js";
 import baseUserModel from "../../models/userModel/baseUserModel.js";
 
@@ -172,11 +172,7 @@ export const getAccessTokenController = async (req, res, next) => {
 // Delete user account
 export const deleteAccountController = async (req, res, next) => {
   try {
-    const { id } = req.Token;
-
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return errResponse(next, "Valid User ID is required", 400);
-    }
+   const id = isValidId(next, req?.Token?.id);
 
     // Delete user account
     const deletedUser = await employeeModel.findByIdAndDelete(id);

@@ -25,7 +25,7 @@ const baseUserSchema = new Schema(
     bio: { type: String },
     skills: [String],
     hashTagId: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
-    postsId: [{ type: Schema.Types.ObjectId, ref: "baseSubmitModel" }],
+    postsId: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
     connectionId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
     requestId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
     moodsHistory: [

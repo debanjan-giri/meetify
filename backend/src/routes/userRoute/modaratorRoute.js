@@ -1,14 +1,18 @@
 import { Router } from "express";
 import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
+import {
+  blockUnblockUserController,
+  updateUserRoleController,
+} from "../../controllers/userController/modaratorController.js";
 
 const modaratorRoute = Router();
 
 // admin
-modaratorRoute.get("/:userType/update-user-role");
-modaratorRoute.post("/:userType/block-user");
-modaratorRoute.post("/:userType/unblock-user");
-modaratorRoute.post("/:userType/reported/:contentId");
+modaratorRoute.get("/admin/update-user-role", updateUserRoleController);
+modaratorRoute.post("/admin/block-unblock-user", blockUnblockUserController);
+modaratorRoute.post("/user/reported/:contentId");
+
 modaratorRoute.get("/:userType/get-reported-content");
-modaratorRoute.post("/:userType/content-removed");
+modaratorRoute.post("/:userType/content-removed/:contentId");
 
 export default modaratorRoute;

@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { errResponse } from "../utils/reqResRelated.js";
 import mongoose from "mongoose";
 import baseUserModel from "../models/userModel/baseUserModel.js";
+import { checkUserType, isValidId } from "../utils/utilityFunction.js";
 
 export const accessTokenValidation = async (req, res, next) => {
   try {
@@ -30,11 +31,7 @@ export const accessTokenValidation = async (req, res, next) => {
         return errResponse(next, message, 401);
       }
 
-      const userId = decoded.id;
-
-      if (!mongoose.Types.ObjectId.isValid(userId) && !userId) {
-        return errResponse(next, "User ID not found", 401);
-      }
+      const userId = isValidId(next, decoded.id);
 
       // Check if user exists in the database
       const user = await baseUserModel
@@ -47,6 +44,9 @@ export const accessTokenValidation = async (req, res, next) => {
       // check user access
       if (!user?.userAccess)
         return errResponse(next, "User access is disabled", 401);
+
+      // check user type
+      checkUserType(next, user?.userType);
 
       // Attach user data to request for further use
       req.Token = { id: user?._id, userType: user?.userType };
