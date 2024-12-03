@@ -1,6 +1,11 @@
 import { Router } from "express";
 import {
+  connectionListController,
+  connectionRequestListController,
+  getEmployeeDetailsController,
   getUserDetailsController,
+  handleConnectionController,
+  removeConnectionController,
   suffledUserListController,
   upateDetailsController,
 } from "../../controllers/userController/userController.js";
@@ -8,39 +13,52 @@ import { accessTokenValidation } from "../../middleware/accessTokenValidation.js
 
 const userRoute = Router();
 
+// update my details
 userRoute.post(
   "/user/update-my-details",
   accessTokenValidation,
   upateDetailsController
 );
 
+// get my details
 userRoute.get(
-  "/user/get-my-details",
+  "/get-my-details",
   accessTokenValidation,
   getUserDetailsController
 );
 
+// suffled friend list
 userRoute.get(
   "/get-suffled-user-list",
   accessTokenValidation,
   suffledUserListController
 );
-userRoute.get("/mood-history");
 
-// employee
-userRoute.get("/employee-details/:userId");
-userRoute.post("/employee/send-connection");
-userRoute.post("/employee/accept-connection");
-userRoute.get("/employee/request-connection");
-userRoute.post("/employee/remove-connection");
-userRoute.post("/employee/connection-list");
+// employee details by id
+userRoute.post(
+  "/get-employee-details",
+  accessTokenValidation,
+  getEmployeeDetailsController
+);
 
-// admin
-userRoute.get("/:userType/update-user-role");
-userRoute.post("/:userType/block-user");
-userRoute.post("/:userType/unblock-user");
-userRoute.post("/:userType/reported/:contentId");
-userRoute.get("/:userType/get-reported-content");
-userRoute.post("/:userType/content-removed");
+// request and accept employee
+userRoute.post(
+  "/send-accept-employee",
+  accessTokenValidation,
+  handleConnectionController
+);
 
+// clear request and unfriend employee
+userRoute.post(
+  "/remove-unfd-employee",
+  accessTokenValidation,
+  removeConnectionController
+);
+
+// request and connection list
+userRoute.get(
+  "/user/connection-list/:type",
+  accessTokenValidation,
+  connectionListController
+);
 export default userRoute;

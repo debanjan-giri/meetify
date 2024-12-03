@@ -16,9 +16,8 @@ import {
 import { createHash, inputValidation } from "../../utils/utilityFunction.js";
 import employeeModel from "../../models/userModel/employeeModel.js";
 import baseUserModel from "../../models/userModel/baseUserModel.js";
-import hrModel from "../../models/userModel/hrModel.js";
-import adminModel from "../../models/userModel/adminModel.js";
 
+// register
 export const registerController = async (req, res, next) => {
   try {
     // Validate request data
@@ -69,6 +68,7 @@ export const registerController = async (req, res, next) => {
   }
 };
 
+// login
 export const loginController = async (req, res, next) => {
   try {
     // Validate request data
@@ -109,6 +109,7 @@ export const loginController = async (req, res, next) => {
   }
 };
 
+// get access token
 export const getAccessTokenController = async (req, res, next) => {
   try {
     const key = process.env.REFRESH_COOKIES_SECRET;
@@ -168,6 +169,7 @@ export const getAccessTokenController = async (req, res, next) => {
   }
 };
 
+// Delete user account
 export const deleteAccountController = async (req, res, next) => {
   try {
     const { id } = req.Token;

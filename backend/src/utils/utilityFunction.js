@@ -1,6 +1,6 @@
-
 import bcrypt from "bcrypt";
 import { errResponse } from "./reqResRelated.js";
+import mongoose from "mongoose";
 
 // password related functions
 export const createHash = async (password) => {
@@ -19,4 +19,14 @@ export const inputValidation = (req, next, validateSchema) => {
   } else {
     return value;
   }
+};
+
+export const isValidId = (next, id) => {
+  const sanitizedId = typeof id === "string" ? id.trim() : null;
+
+  if (!sanitizedId || !mongoose.Types.ObjectId.isValid(sanitizedId)) {
+    return errResponse(next, "Valid User ID is required", 400);
+  }
+
+  return sanitizedId;
 };

@@ -26,6 +26,14 @@ const baseUserSchema = new Schema(
     skills: [String],
     hashTagId: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
     postsId: [{ type: Schema.Types.ObjectId, ref: "baseSubmitModel" }],
+    connectionId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    requestId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    moodsHistory: [
+      {
+        date: { type: Date },
+        mood: { type: String },
+      },
+    ],
   },
   {
     discriminatorKey: "userType",
