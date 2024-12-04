@@ -8,7 +8,6 @@ const baseUserSchema = new Schema(
       required: true,
       default: "employee",
     },
-    userAccess: { type: Boolean, default: true, required: true },
     name: { type: String },
     email: {
       type: String,
@@ -18,22 +17,23 @@ const baseUserSchema = new Schema(
       unique: true,
     },
     password: { type: String, required: true, trim: true },
-    photoUrl: { type: String },
+    profilePhoto: { type: String },
     dateOfBirth: { type: String },
-    company: { type: String },
+    company: { type: String, required: true, default: "clirnet" },
     designation: { type: String },
     bio: { type: String },
     skills: [String],
-    hashTagId: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
-    contendId: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
-    connectionId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-    requestId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-    moodsHistory: [
+    myHashTagIds: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
+    myContendIds: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
+    myConnectionIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    myFdRequestIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    MoodsHistoryArray: [
       {
         date: { type: Date },
         mood: { type: String },
       },
     ],
+    userAccess: { type: Boolean, default: true, required: true },
   },
   {
     discriminatorKey: "userType",
@@ -46,8 +46,10 @@ const baseUserSchema = new Schema(
 const baseUserModel = model("baseUserModel", baseUserSchema);
 export default baseUserModel;
 
+// skip in response
 function omitSensitiveFields(doc, ret) {
   delete ret.password;
   delete ret.__v;
+  delete ret.userAccess;
   return ret;
 }

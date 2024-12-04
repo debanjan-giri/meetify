@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 
-const hashTagSchema = new Schema({
-  creatorId: { 
+const baseHashTagSchema = new Schema({
+  creatorId: {
     type: Schema.Types.ObjectId,
     ref: "baseUserModel",
     required: true,
@@ -9,17 +9,16 @@ const hashTagSchema = new Schema({
   hashTagName: { type: String, required: true, unique: true },
   trendingScore: { type: Number, default: 0 },
 
-  submitedById: [
+  contentSubmitedArray: [
     {
       userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
-      dataId: { type: Schema.Types.ObjectId, ref: "baseContentModel" },
+      contentId: { type: Schema.Types.ObjectId, ref: "baseContentModel" },
     },
   ],
   isAdmin: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
 });
 
-const hashTagModel = model("hashTagModel", hashTagSchema);
+const baseHashTagModel = model("baseHashTagModel", baseHashTagSchema);
 
-export default hashTagModel;
+export default baseHashTagModel;

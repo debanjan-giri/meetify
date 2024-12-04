@@ -3,16 +3,14 @@ import { Schema, model } from "mongoose";
 const hashTagPostSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String },
-  photoUrl: { type: String },
-  contentType: [
-    {
-      type: String,
-      enum: ["tagPost"],
-      required: true,
-    },
-  ],
-  likeCount: { type: Number, default: 0 },
-  likedById: [
+  photoUrl: [{ type: String }],
+  contentType: {
+    type: String,
+    default: "tagPost",
+    required: true,
+  },
+  totalLike: { type: Number, default: 0 },
+  likedArray: [
     {
       userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
       likeType: {
@@ -22,7 +20,7 @@ const hashTagPostSchema = new Schema({
       },
     },
   ],
-  comments: [
+  commentsArray: [
     {
       userId: {
         type: Schema.Types.ObjectId,
@@ -30,8 +28,8 @@ const hashTagPostSchema = new Schema({
         required: true,
       },
       comment: { type: String, required: true },
-      likeCount: { type: Number, default: 0 },
-      likedId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+      totalLike: { type: Number, default: 0 },
+      likedByIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
       createdAt: { type: Date, default: Date.now },
     },
   ],

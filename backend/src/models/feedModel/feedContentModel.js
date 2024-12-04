@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 
 const baseContentSchema = new Schema(
   {
-    userId: {
+    creatorId: {
       type: Schema.Types.ObjectId,
       ref: "baseUserModel",
       required: true,
@@ -11,24 +11,24 @@ const baseContentSchema = new Schema(
     contentType: [
       {
         type: String,
-        enum: ["post", "status", "challenge"],
+        enum: ["content", "status", "challenge"],
         required: true,
       },
     ],
 
     privacyType: {
       type: String,
-      enum: ["public", "friends", "selected"],
+      enum: ["public", "friends", "custom"],
       default: "public",
     },
 
-    selectedPrivacyIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    customPrivacyIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
 
-    title: { type: String },
+    title: { type: String, required: true },
     description: { type: String },
     photoUrl: { type: String },
     likeCount: { type: Number, default: 0 },
-    likedById: [
+    likedArray: [
       {
         userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
         likeType: {
@@ -39,32 +39,34 @@ const baseContentSchema = new Schema(
       },
     ],
 
-    commentsById: [
+    commentsArray: [
       {
         userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
         comment: { type: String },
-        likeCount: { type: Number, default: 0 },
-        likedId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+        totalLike: { type: Number, default: 0 },
+        likedByIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
         createdAt: { type: Date, default: Date.now, index: true },
       },
     ],
-    hashTagId: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },
-    privacy: {
-      type: String,
-      enum: ["public", "friends", "selected"],
-      default: "public",
-    },
-    reported: {
-      type: Boolean,
-      default: false,
-    },
+    isAddHashTag: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },
+
     createdAt: { type: Date, default: Date.now },
+    expiresAt: { type: Date },
   },
   {
     discriminatorKey: "contentType",
     timestamps: true,
   }
 );
+
+baseContentModel.pre("save", function (next) {
+  if (this.contentType === "status" && !this.expiresAt) {
+    this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  }
+  next();
+});
+
+baseContentModel.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const baseContentModel = model("baseContentModel", baseContentSchema);
 

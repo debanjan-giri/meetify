@@ -6,7 +6,7 @@ import {
   getContentByIdController,
   likeUnlikeCommentController,
   likeUnlikeSubmitController,
-} from "../../controllers/commonController/commonController";
+} from "../controllers/commonController/commonController";
 
 const commonRoute = Router();
 // "post", "status", "challenge"

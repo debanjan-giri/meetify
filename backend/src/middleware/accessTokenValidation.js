@@ -46,10 +46,10 @@ export const accessTokenValidation = async (req, res, next) => {
         return errResponse(next, "User access is disabled", 401);
 
       // check user type
-      checkUserType(next, user?.userType);
+      const userType = checkUserType(next, user?.userType);
 
       // Attach user data to request for further use
-      req.Token = { id: user?._id, userType: user?.userType };
+      req.Token = { id: user?._id, userType: userType };
       next();
     });
   } catch (error) {

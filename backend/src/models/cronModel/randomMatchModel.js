@@ -29,6 +29,20 @@ const baseMatchSchema = new Schema(
     likedById: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
     createdAt: { type: Date, default: Date.now },
     expiresAt: { type: Date, default: Date.now + 7 * 60 * 60 * 1000 },
+    title: { type: String },
+    description: { type: String },
+    photoUrl: { type: String },
+    likedById: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    likesEnum: {
+      type: String,
+      enum: ["wow", "like", "funny", "happy"],
+      default: "happy",
+    },
+    comments: {
+      userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
+      comment: { type: String },
+      createdAt: { type: Date, default: Date.now },
+    },
   },
   { discriminatorKey: "actionType", timestamps: true }
 );
