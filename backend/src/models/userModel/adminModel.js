@@ -7,12 +7,12 @@ const adminSchema = new Schema({
   employeeId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   reportedDetails: [
     {
-      dataId: { type: Schema.Types.ObjectId, ref: "baseContentModel" },
+      contentId: { type: Schema.Types.ObjectId, ref: "baseContentModel" },
       authorId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
       reportedById: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
     },
   ],
-});
+}); 
 
 const adminModel = baseUserModel.discriminator("admin", adminSchema);
 

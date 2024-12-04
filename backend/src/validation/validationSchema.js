@@ -9,6 +9,10 @@ import {
   designation,
   skills,
   photoUrl,
+  type,
+  description,
+  title,
+  hashTag,
 } from "./constantSchema.js";
 
 export const registerValidation = Joi.object({
@@ -33,9 +37,17 @@ export const updateDetailsValidation = Joi.object({
   photoUrl,
 });
 
-export const textValidation = Joi.object({
-  type: Joi.string().required().messages({
-    "string.empty": "Type is required",
-    "any.required": "Type is required",
+export const typeValidation = Joi.object({
+  type,
+});
+
+export const createContentValidation = Joi.object({
+  type,
+  title,
+  description,
+  photoUrl: Joi.string().uri().messages({
+    "string.uri": "Photo URL must be a valid URL",
   }),
+  hashTag,
+  challengeTitle: Joi.string(),
 });

@@ -2,17 +2,46 @@ import { Router } from "express";
 import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
 import {
   blockUnblockUserController,
+  contentRemovingController,
+  getReportedContentController,
+  getTotalUserController,
+  submitReportedController,
   updateUserRoleController,
 } from "../../controllers/userController/modaratorController.js";
 
 const modaratorRoute = Router();
 
 // admin
-modaratorRoute.get("/admin/update-user-role", updateUserRoleController);
-modaratorRoute.post("/admin/block-unblock-user", blockUnblockUserController);
-modaratorRoute.post("/user/reported/:contentId");
+modaratorRoute.get(
+  "/admin/update-user-role",
+  accessTokenValidation,
+  updateUserRoleController
+);
+modaratorRoute.post(
+  "/admin/block-unblock-user",
+  accessTokenValidation,
+  blockUnblockUserController
+);
+modaratorRoute.post(
+  "/user/mark-report-content",
+  accessTokenValidation,
+  submitReportedController
+);
+modaratorRoute.get(
+  "/admin/get-reported-content",
+  accessTokenValidation,
+  getReportedContentController
+);
+modaratorRoute.post(
+  "/admin/content-removed",
+  accessTokenValidation,
+  contentRemovingController
+);
 
-modaratorRoute.get("/:userType/get-reported-content");
-modaratorRoute.post("/:userType/content-removed/:contentId");
+modaratorRoute.get(
+  "/admin/get-all-type-user",
+  accessTokenValidation,
+  getTotalUserController
+);
 
 export default modaratorRoute;

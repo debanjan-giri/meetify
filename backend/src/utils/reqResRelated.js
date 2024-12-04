@@ -5,7 +5,7 @@ export const errResponse = (
 ) => {
   const error = new Error(message);
   error.statusCode = statusCode;
-  error.clientError = true; // to differentiate between server and client errors
+  error.clientError = true; // differ between server and client errors
   next(error);
 };
 

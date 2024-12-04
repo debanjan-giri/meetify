@@ -59,7 +59,23 @@ export const photoUrl = Joi.string().uri().messages({
   "string.uri": "Photo URL must be a valid URL",
 });
 
-export const text = Joi.string().required().messages({
-  "string.empty": "Text is required",
-  "any.required": "Text is required",
+export const type = Joi.string().required().messages({
+  "string.empty": "Type is required",
+  "any.required": "Type is required",
 });
+
+export const title = Joi.string().required().messages({
+  "string.empty": "Title is required",
+  "any.required": "Title is required",
+});
+
+export const description = Joi.string().messages({
+  "string.empty": "Description is required",
+  "any.required": "Description is required",
+});
+
+export const hashTag = Joi.string()
+  .pattern(/^#\w+(\s\w+){2,}$/, "hashtag")
+  .messages({
+    "string.pattern.name": "Hashtag must start with #",
+  });

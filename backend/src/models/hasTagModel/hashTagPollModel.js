@@ -1,9 +1,14 @@
 import { Schema, model } from "mongoose";
-import baseHashTagModel from "./baseHashTagModel";
 
 const hashTagPollSchema = new Schema({
   question: { type: String },
-  photoUrl: { type: String },
+  contentType: [
+    {
+      type: String,
+      enum: ["tagPoll"],
+      required: true,
+    },
+  ],
   options: [
     {
       text: { type: String, required: true },
@@ -24,8 +29,6 @@ const hashTagPollSchema = new Schema({
   ],
 });
 
-const hashTagPollModel = baseHashTagModel.discriminator(
-  "poll",
-  hashTagPollSchema
-);
+const hashTagPollModel = model("hashTagPollModel", hashTagPollSchema);
+
 export default hashTagPollModel;

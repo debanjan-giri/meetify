@@ -3,7 +3,7 @@ import adminModel from "../../models/userModel/adminModel.js";
 import employeeModel from "../../models/userModel/employeeModel.js";
 
 import {
-  textValidation,
+  typeValidation,
   updateDetailsValidation,
 } from "../../validation/validationSchema.js";
 import {
@@ -156,7 +156,7 @@ export const getEmployeeDetailsController = async (req, res, next) => {
 export const handleConnectionController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { type } = inputValidation(req, next, textValidation);
+    const { type } = inputValidation(req, next, typeValidation);
 
     // Validate the type
     if (!type || !["send", "accept"].includes(type)) {
@@ -217,7 +217,7 @@ export const handleConnectionController = async (req, res, next) => {
 export const removeConnectionController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { type } = inputValidation(req, next, textValidation);
+    const { type } = inputValidation(req, next, typeValidation);
 
     // Validate the type
     if (!type || !["fdrm", "rm"].includes(type)) {
@@ -273,7 +273,7 @@ export const removeConnectionController = async (req, res, next) => {
 export const connectionListController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { type } = inputValidation(req, next, textValidation);
+    const { type } = inputValidation(req, next, typeValidation);
 
     // Validate the type
     if (!type || !["request", "connection"].includes(type)) {

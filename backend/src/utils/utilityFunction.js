@@ -40,3 +40,11 @@ export const checkUserType = (next, userType) => {
 
   return validUserTypes.includes(userType.trim());
 };
+
+export function getCleanHashTag(input) {
+  if (typeof input !== "string" || !input.trim()) {
+    return null;
+  }
+  const match = input.match(/^#[a-zA-Z0-9_]+/);
+  return match ? match[0] : null;
+}

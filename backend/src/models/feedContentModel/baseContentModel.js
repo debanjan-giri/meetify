@@ -7,12 +7,6 @@ const baseContentSchema = new Schema(
       ref: "baseUserModel",
       required: true,
     },
-    userType: {
-      type: String,
-      enum: ["hr", "employee", "admin"],
-      default: "employee",
-      required: true,
-    },
 
     contentType: [
       {
@@ -21,20 +15,35 @@ const baseContentSchema = new Schema(
         required: true,
       },
     ],
+
+    privacyType: {
+      type: String,
+      enum: ["public", "friends", "selected"],
+      default: "public",
+    },
+
+    selectedPrivacyIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+
     title: { type: String },
     description: { type: String },
     photoUrl: { type: String },
     likeCount: { type: Number, default: 0 },
-    likedById: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-    likesEnum: {
-      type: String,
-      enum: ["wow", "like", "funny", "happy"],
-      default: "happy",
-    },
+    likedById: [
+      {
+        userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
+        likeType: {
+          type: String,
+          enum: ["wow", "like", "funny", "happy"],
+          default: "happy",
+        },
+      },
+    ],
+
     commentsById: [
       {
         userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
         comment: { type: String },
+        likes: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
         createdAt: { type: Date, default: Date.now },
       },
     ],
