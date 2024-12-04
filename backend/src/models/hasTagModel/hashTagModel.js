@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
 
 const hashTagSchema = new Schema({
-  creatorId: {
+  creatorId: { 
     type: Schema.Types.ObjectId,
     ref: "baseUserModel",
     required: true,

@@ -43,8 +43,9 @@ const baseContentSchema = new Schema(
       {
         userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
         comment: { type: String },
-        likes: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-        createdAt: { type: Date, default: Date.now },
+        likeCount: { type: Number, default: 0 },
+        likedId: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+        createdAt: { type: Date, default: Date.now, index: true },
       },
     ],
     hashTagId: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },

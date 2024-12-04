@@ -44,4 +44,6 @@ modaratorRoute.get(
   getTotalUserController
 );
 
+modaratorRoute.delete("/admin/delete-hashtag");
+
 export default modaratorRoute;

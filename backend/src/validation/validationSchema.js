@@ -51,3 +51,22 @@ export const createContentValidation = Joi.object({
   hashTag,
   challengeTitle: Joi.string(),
 });
+
+export const likeUnlikeSubmitValidation = Joi.object({
+  type,
+  likeType: Joi.string().valid("like", "wow", "funny", "happy").required(),
+});
+
+export const commentSubmitValidation = Joi.object({
+  type,
+  comment: Joi.string().required().max(30).min(2),
+});
+
+export const commmetLikeValidation = Joi.object({
+  type,
+  likeType: Joi.string().valid("like", "unlike").required(),
+});
+
+export const hashTagSubmitValidation = Joi.object({
+  hashTag,
+});
