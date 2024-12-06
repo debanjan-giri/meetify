@@ -8,7 +8,7 @@ const baseUserSchema = new Schema(
       required: true,
       default: "employee",
     },
-    name: { type: String },
+    name: { type: String, required: true },
     email: {
       type: String,
       required: true,
@@ -19,15 +19,19 @@ const baseUserSchema = new Schema(
     password: { type: String, required: true, trim: true },
     profilePhoto: { type: String },
     dateOfBirth: { type: String },
-    company: { type: String, required: true, default: "clirnet" },
+    company: {
+      type: String,
+      required: true,
+      enum: ["clirnet", "doctube", "mymd"],
+      default: "clirnet",
+    },
     designation: { type: String },
     bio: { type: String },
-    skills: [String],
     myHashTagIds: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
     myContendIds: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
     myConnectionIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
     myFdRequestIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-    MoodsHistoryArray: [
+    moodsHistoryArray: [
       {
         date: { type: Date },
         mood: { type: String },
