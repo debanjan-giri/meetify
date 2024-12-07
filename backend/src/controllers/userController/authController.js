@@ -1,9 +1,5 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import {
-  loginValidation,
-  registerValidation,
-} from "../../validation/validationSchema.js";
 
 import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 
@@ -20,7 +16,7 @@ import {
   isEmail,
   isName,
   isPassword,
-} from "../../validation/valodationSchema.js";
+} from "../../validation/validationSchema.js";
 
 // register
 export const registerController = async (req, res, next) => {

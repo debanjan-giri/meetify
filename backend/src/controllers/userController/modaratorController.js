@@ -17,7 +17,7 @@ import contentReportModel from "../../models/commonModel/contentReportModel.js";
 export const updateUserRoleController = async (req, res, next) => {
   try {
     // check user type
-    const userType = req.Token.userType;
+    const userType = req.token.userType;
 
     // check user type permission
     if (userType !== userTypeConst.ADMIN) {
@@ -57,7 +57,7 @@ export const updateUserRoleController = async (req, res, next) => {
 export const blockUnblockUserController = async (req, res, next) => {
   try {
     // check user type
-    const userType = req.Token.userType;
+    const userType = req.token.userType;
     const employeeId = isValidId(req.body.employeeId);
 
     // admin or hr
@@ -113,7 +113,7 @@ export const blockUnblockUserController = async (req, res, next) => {
 
 export const getAllReportedContentController = async (req, res, next) => {
   try {
-    const userType = req.Token.userType;
+    const userType = req.token.userType;
 
     // admin or hr
     if (userType !== userTypeConst.ADMIN || userType !== userTypeConst.HR) {
@@ -138,7 +138,7 @@ export const getAllReportedContentController = async (req, res, next) => {
 
 export const contentRemovingController = async (req, res, next) => {
   try {
-    const userType = req.Token.userType;
+    const userType = req.token.userType;
     const creatorId = isValidId(req.body.creatorId);
     const contentId = isValidId(req.body.contentId);
 
@@ -178,8 +178,8 @@ export const contentRemovingController = async (req, res, next) => {
 
 export const getTotalUserController = async (req, res, next) => {
   try {
-    const userId = req.Token.id;
-    const userType = req.Token.userType;
+    const userId = req.token.id;
+    const userType = req.token.userType;
 
     // access availble for admin
     if (userType !== userTypeConst.ADMIN || userType !== userTypeConst.HR) {

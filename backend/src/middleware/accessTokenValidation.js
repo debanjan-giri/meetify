@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import { errResponse } from "../utils/reqResRelated.js";
-import mongoose from "mongoose";
-import baseUserModel from "../models/userModel/baseUserModel.js";
-import { checkUserType, isValidId } from "../utils/utilityFunction.js";
+import { isValidId } from "../utils/utilityFunction.js";
+import baseUserModel from "../models/accUserModel/baseUserModel.js";
+import { userTypeConst } from "../models/typeConstant.js";
 
 export const accessTokenValidation = async (req, res, next) => {
   try {
@@ -47,10 +47,13 @@ export const accessTokenValidation = async (req, res, next) => {
         return errResponse(next, "User access is disabled", 401);
 
       // check user type
-      const userType = checkUserType(next, user?.userType);
+      const userType = Object.values(userTypeConst).includes(user?.userType);
+      if (!userType) {
+        return errResponse(next, "You do not have permission", 403);
+      }
 
       // Attach user data to request for further use
-      req.Token = { id: user?._id, userType: userType };
+      req.token = { id: user?._id, userType: user?.userType };
       next();
     });
   } catch (error) {

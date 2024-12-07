@@ -50,7 +50,7 @@ export const getContentByIdController = async (req, res, next) => {
 
 export const likeUnlikeSubmitController = async (req, res, next) => {
   try {
-    const userId = req.Token.id;
+    const userId = req.token.id;
     const contentId = isValidId(req.body.contentId);
     const { type: contentType, likeType } = inputValidation(
       req,
@@ -143,7 +143,7 @@ export const likeUnlikeSubmitController = async (req, res, next) => {
 
 export const commentSubmitController = async (req, res, next) => {
   try {
-    const userId = req.Token.id;
+    const userId = req.token.id;
     const contentId = isValidId(req.body.contentId);
     const { type: contentType, comment } = inputValidation(
       req,
@@ -194,7 +194,7 @@ export const commentSubmitController = async (req, res, next) => {
 
 export const likeUnlikeCommentController = async (req, res, next) => {
   try {
-    const userId = req.Token.id;
+    const userId = req.token.id;
     const contentId = isValidId(req.body.contentId);
     const commentId = isValidId(req.body.commentId);
     const { type: contentType } = inputValidation(req, next, typeValidation);
@@ -321,7 +321,7 @@ export const getCommentController = async (req, res, next) => {
 
 export const deleteCommentController = async (req, res, next) => {
   try {
-    const userId = req.Token.id;
+    const userId = req.token.id;
     const contentId = isValidId(req.params.contentId);
     const commentId = isValidId(req.body.commentId);
 

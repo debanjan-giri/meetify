@@ -135,7 +135,7 @@ export const deleteMyContentController = async (req, res, next) => {
       return errResponse(next, "Content not deleted successfully", 404);
 
     // remove content from user
-    const userId = req.Token.id;
+    const userId = req.token.id;
     const updatedUser = await baseUserModel.findByIdAndUpdate(
       userId,
       { $pull: { contendId: contentId } },

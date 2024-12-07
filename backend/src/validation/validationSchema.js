@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { userTypeConst } from "../models/typeConstant";
+import { userTypeConst } from "../models/typeConstant.js";
 
 // data type
 export const isNumber = Joi.number().required().messages({
