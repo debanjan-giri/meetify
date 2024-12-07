@@ -1,32 +1,44 @@
 import { Schema, model } from "mongoose";
+import { userTypeConst } from "../typeConstant.js";
 
 const baseUserSchema = new Schema(
   {
     userType: {
-      type: String,
-      enum: ["employee", "hr", "admin"],
+      type: Number,
+      enum: Object.values(userTypeConst),
       required: true,
-      default: "employee",
+      default: userTypeConst.employee,
+      index: true,
     },
-    name: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
     email: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
       unique: true,
+      index: true,
     },
-    password: { type: String, required: true, trim: true },
-    profilePhoto: { type: String },
-    dateOfBirth: { type: String },
+    password: { type: String, required: true, trim: true, select: false },
+    profilePhoto: {
+      type: String,
+      trim: true,
+    },
+    dateOfBirth: { type: String, trim: true },
     company: {
       type: String,
       required: true,
+      trim: true,
       enum: ["clirnet", "doctube", "mymd"],
       default: "clirnet",
     },
-    designation: { type: String },
-    bio: { type: String },
+    designation: { type: String, trim: true },
+    bio: { type: String, trim: true },
     myHashTagIds: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
     myContendIds: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
     myConnectionIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
@@ -34,10 +46,10 @@ const baseUserSchema = new Schema(
     moodsHistoryArray: [
       {
         date: { type: Date },
-        mood: { type: String },
+        mood: { type: String, trim: true },
       },
     ],
-    userAccess: { type: Boolean, default: true, required: true },
+    userAccess: { type: Boolean, default: true, required: true, select: false },
   },
   {
     discriminatorKey: "userType",

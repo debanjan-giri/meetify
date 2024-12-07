@@ -1,27 +1,48 @@
 import baseContentModel from "../../models/feedContentModel/baseContentModel";
-import baseUserModel from "../../models/userModel/baseUserModel.js";
+import { userTypeConst } from "../../models/typeConstant.js";
+import Joi from "joi";
 import { okResponse } from "../../utils/reqResRelated.js";
-import { inputValidation, isValidId } from "../../utils/utilityFunction";
+import {
+  checkType,
+  inputValidation,
+  isValidId,
+} from "../../utils/utilityFunction";
+import {
+  isBoolean,
+  isUserTypeInclude,
+} from "../../validation/valodationSchema.js";
+import baseUserModel from "../../models/accUserModel/baseUserModel.js";
+import contentReportModel from "../../models/commonModel/contentReportModel.js";
 
 export const updateUserRoleController = async (req, res, next) => {
   try {
     // check user type
     const userType = req.Token.userType;
-    const employeeId = isValidId(req.body.employeeId);
 
     // check user type permission
-    if (userType !== "admin") {
+    if (userType !== userTypeConst.ADMIN) {
       return errResponse(next, "You do not have permission", 403);
     }
 
+    const { setUserType } = inputValidation(
+      req,
+      next,
+      Joi.object({
+        setUserType: isUserTypeInclude,
+      })
+    );
+
+    const employeeId = isValidId(req.body.employeeId);
+
     // check if user is exists
-    const user = await baseUserModel.findById(employeeId);
-    if (!user) return errResponse(next, "User not found", 404);
+    const isUserExist = await baseUserModel.findById(userId).lean();
+    if (!isUserExist || isUserExist.userAccess === false)
+      return errResponse(next, "User not found", 404);
 
     // update user role
     const updatedUser = await baseUserModel.findByIdAndUpdate(
       employeeId,
-      { $set: { userType: userType } },
+      { $set: { userType: setUserType } },
       { new: true }
     );
     if (!updatedUser) return errResponse(next, "User role update failed", 404);
@@ -38,44 +59,51 @@ export const blockUnblockUserController = async (req, res, next) => {
     // check user type
     const userType = req.Token.userType;
     const employeeId = isValidId(req.body.employeeId);
-    const { type } = inputValidation(req, next, typeValidation);
 
     // admin or hr
-    if (userType !== "admin" || userType !== "hr") {
+    if (userType !== userTypeConst.ADMIN || userType !== userTypeConst.HR) {
       return errResponse(next, "You do not have permission", 403);
     }
-
-    // valid type
-    if (!type || !["block", "unblock"].includes(type)) {
-      return errResponse(next, "Invalid type provided", 400);
-    }
+    const { userAccess } = inputValidation(
+      req,
+      next,
+      Joi.object({
+        userAccess: isBoolean,
+      })
+    );
 
     // Fetch the target user's details
-    const targetUser = await baseUserModel.findById(employeeId);
+    const targetUser = await baseUserModel
+      .findById(employeeId)
+      .select("userType")
+      .lean();
     if (!targetUser) {
       return errResponse(next, "Target user not found", 404);
     }
 
     // Ensure HR cannot block/unblock an admin
-    if (userType === "hr" && targetUser.userType === "admin") {
+    if (
+      userType === userTypeConst.HR &&
+      targetUser.userType === userTypeConst.ADMIN
+    ) {
       return errResponse(next, "HR cannot block or unblock an admin", 403);
     }
 
     // Perform block/unblock action
-    const updatedUser = await baseUserModel.findByIdAndUpdate(
+    const updatedUserAccess = await baseUserModel.findByIdAndUpdate(
       employeeId,
-      { $set: { userAccess: type === "block" ? false : true } },
+      { $set: { userAccess: !!userAccess } },
       { new: true }
     );
-    if (!updatedUser) {
+    if (!updatedUserAccess) {
       return errResponse(next, "User update failed", 500);
     }
 
     // Return success response
-    const actionMessage =
-      type === "block"
-        ? "User blocked successfully"
-        : "User unblocked successfully";
+    const actionMessage = updatedUserAccess?.userAccess
+      ? "User unblocked successfully"
+      : "User blocked successfully";
+
     return okResponse(res, actionMessage, updatedUser);
   } catch (error) {
     console.error(`Error in blockUnblockUserController : ${error.message}`);
@@ -83,73 +111,19 @@ export const blockUnblockUserController = async (req, res, next) => {
   }
 };
 
-export const submitReportedController = async (req, res, next) => {
+export const getAllReportedContentController = async (req, res, next) => {
   try {
-    const userId = req.Token.id;
-    const { contentId, autherId } = req.body;
-
-    // Validate content ID
-    const validContentId = isValidId(contentId);
-    if (!validContentId) return errResponse(next, "Invalid content ID", 400);
-
-    // Validate auther ID
-    const validAutherId = isValidId(autherId);
-    if (!validAutherId) return errResponse(next, "Invalid auther ID", 400);
-
-    // Check if content exists
-    const content = await baseContentModel.findById(contentId);
-    if (!content) return errResponse(next, "Content not found", 404);
-
-    const reportDetails = {
-      contentId: validContentId,
-      authorId: validAutherId,
-      reportedById: userId,
-    };
-
-    // Find all admins and HRs and put reported details
-    const adminsAndHRs = await baseUserModel.find({
-      userType: { $in: ["admin", "hr"] },
-    });
-
-    if (!adminsAndHRs.length)
-      return errResponse(next, "No admins or HRs found", 404);
-
-    // Update field
-    const updatePromises = adminsAndHRs.map((user) =>
-      baseUserModel.findByIdAndUpdate(
-        user._id,
-        { $push: { reportedDetails: reportDetails } },
-        { new: true }
-      )
-    );
-
-    // Await all updates
-    await Promise.all(updatePromises);
-
-    return okResponse(
-      res,
-      "Reported content successfully updated for admins and HRs"
-    );
-  } catch (error) {
-    console.error(`Error in reportedContentController: ${error.message}`);
-    next(error);
-  }
-};
-
-export const getReportedContentController = async (req, res, next) => {
-  try {
-    const userId = req.Token.id;
     const userType = req.Token.userType;
 
     // admin or hr
-    if (userType !== "admin" || userType !== "hr") {
+    if (userType !== userTypeConst.ADMIN || userType !== userTypeConst.HR) {
       return errResponse(next, "You do not have permission", 403);
     }
 
     // find reported details
-    const reportedDetails = await baseUserModel
-      .findById(userId)
-      .select("reportedDetails");
+    const reportedDetails = await contentReportModel
+      .find()
+      .populate("reportedDetails");
 
     if (!reportedDetails || !reportedDetails.reportedDetails.length) {
       return errResponse(next, "No reported details found", 404);
@@ -165,11 +139,11 @@ export const getReportedContentController = async (req, res, next) => {
 export const contentRemovingController = async (req, res, next) => {
   try {
     const userType = req.Token.userType;
-    const autherId = isValidId(req.body.autherId);
+    const creatorId = isValidId(req.body.creatorId);
     const contentId = isValidId(req.body.contentId);
 
     // admin or hr
-    if (userType !== "admin" || userType !== "hr") {
+    if (userType !== userTypeConst.ADMIN || userType !== userTypeConst.HR) {
       return errResponse(next, "You do not have permission", 403);
     }
 
@@ -177,8 +151,8 @@ export const contentRemovingController = async (req, res, next) => {
     const content = await baseContentModel.findById(contentId);
     if (!content) {
       // delete content from all hr and admin
-      await baseUserModel.updateMany(
-        { userType: { $in: ["admin", "hr"] } },
+      await contentReportModel.updateMany(
+        { reportedDetails: { contentId: contentId } },
         { $pull: { reportedDetails: { contentId: contentId } } }
       );
       return errResponse(next, "Content not found", 404);
@@ -189,17 +163,11 @@ export const contentRemovingController = async (req, res, next) => {
 
     // remove content from user
     const updatedUser = await baseUserModel.findByIdAndUpdate(
-      autherId,
+      creatorId,
       { $pull: { contendId: contentId } },
       { new: true }
     );
     if (!updatedUser) return errResponse(next, "User not found", 404);
-
-    // all reported details from all admin and hr
-    await baseUserModel.updateMany(
-      { userType: { $in: ["admin", "hr"] } },
-      { $pull: { reportedDetails: { contentId: contentId } } }
-    );
 
     return okResponse(res, "Content removed successfully");
   } catch (error) {
@@ -214,7 +182,7 @@ export const getTotalUserController = async (req, res, next) => {
     const userType = req.Token.userType;
 
     // access availble for admin
-    if (userType !== "admin" || userType !== "hr") {
+    if (userType !== userTypeConst.ADMIN || userType !== userTypeConst.HR) {
       return errResponse(next, "You do not have permission", 403);
     }
 

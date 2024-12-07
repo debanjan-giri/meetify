@@ -12,9 +12,15 @@ import {
   generateRefreshToken,
 } from "../../utils/tokenRelated.js";
 
-import { createHash, inputValidation, isValidId } from "../../utils/utilityFunction.js";
-import employeeModel from "../../models/userModel/employeeModel.js";
-import baseUserModel from "../../models/userModel/baseUserModel.js";
+import { createHash, inputValidation } from "../../utils/utilityFunction.js";
+import baseUserModel from "../../models/accUserModel/baseUserModel.js";
+import { userTypeConst } from "../../models/typeConstant.js";
+import {
+  isCompany,
+  isEmail,
+  isName,
+  isPassword,
+} from "../../validation/valodationSchema.js";
 
 // register
 export const registerController = async (req, res, next) => {
@@ -23,23 +29,35 @@ export const registerController = async (req, res, next) => {
     const { email, password, name, company } = inputValidation(
       req,
       next,
-      registerValidation
+      Joi.object({
+        email: isEmail,
+        password: isPassword,
+        name: isName,
+        company: isCompany,
+      })
     );
 
     // Check if user already exists
-    const existingUser = await employeeModel.findOne({ email }).select("_id");
+    const existingUser = await baseUserModel
+      .findOne({ email })
+      .select("email")
+      .lean();
     if (existingUser) return errResponse(next, "User already exists", 409);
 
     // Hash password
     const hashedPassword = await createHash(password);
 
+    // admin login
+    const isAdminEmail = email === process.env.ADMIN_EMAIL ? true : false;
+
     // Create new user
-    const newUser = await employeeModel.create({
+    const newUser = await baseUserModel.create({
       name,
       email,
       company,
       password: hashedPassword,
       userAccess: true,
+      userType: isAdminEmail ? userTypeConst.ADMIN : userTypeConst.EMPLOYEE,
     });
     if (!newUser) return errResponse(next, "User registration failed", 500);
 
@@ -50,8 +68,8 @@ export const registerController = async (req, res, next) => {
     const refreshtoken = generateRefreshToken(res, next, newUser);
 
     if (!accesstoken && !refreshtoken) {
-      await authModel.deleteOne({ _id: newUser._id });
-      return errResponse(next, "auth token generation failed", 500);
+      await baseUserModel.deleteOne({ _id: newUser._id });
+      return errResponse(next, "please register again", 500);
     }
 
     // Success response
@@ -71,12 +89,20 @@ export const registerController = async (req, res, next) => {
 export const loginController = async (req, res, next) => {
   try {
     // Validate request data
-    const value = inputValidation(req, next, loginValidation);
-
-    const { email, password } = value;
+    const { email, password } = inputValidation(
+      req,
+      next,
+      Joi.object({
+        email: isEmail,
+        password: isPassword,
+      })
+    );
 
     // Check if user exists
-    const user = await baseUserModel.findOne({ email });
+    const user = await baseUserModel
+      .findOne({ email })
+      .select("email", "password", "userAccess")
+      .lean();
 
     if (!user)
       return errResponse(next, "Invalid email number or password", 401);
@@ -97,7 +123,7 @@ export const loginController = async (req, res, next) => {
     const refreshtoken = generateRefreshToken(res, next, user);
 
     if (!accesstoken && !refreshtoken) {
-      return errResponse(next, "auth token generation failed", 500);
+      return errResponse(next, "retry login", 500);
     }
 
     // Return success response
@@ -139,7 +165,10 @@ export const getAccessTokenController = async (req, res, next) => {
         }
 
         // Find the user in the database
-        const user = await baseUserModel.findById(decoded.id).select("_id");
+        const user = await baseUserModel
+          .findById(decoded.id)
+          .select("_id , userAccess")
+          .lean();
         if (!user) {
           return errResponse(next, "User not found in database", 404);
         }
@@ -171,11 +200,17 @@ export const getAccessTokenController = async (req, res, next) => {
 // Delete user account
 export const deleteAccountController = async (req, res, next) => {
   try {
-   const id = isValidId(next, req?.Token?.id);
+    const userId = req?.Token?.id;
 
     // Delete user account
-    const deletedUser = await employeeModel.findByIdAndDelete(id);
+    const deletedUser = await baseUserModel.findByIdAndDelete(userId);
     if (!deletedUser) return errResponse(next, "Failed to delete account", 500);
+
+    // also delete hash tag
+    await hashTagModel.deleteMany({ creatorId: userId });
+
+    // also change content model
+    await baseContentModel.deleteMany({ creatorId });
 
     // Clear refresh token cookie
     res.clearCookie(process.env.REFRESH_COOKIES_SECRET, {

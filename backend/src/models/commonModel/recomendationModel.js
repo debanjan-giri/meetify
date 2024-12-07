@@ -14,4 +14,4 @@ export default model("recomendationModel", recomendationSchema);
 // they will store post id and user id
 
 // topic wise ( quote  ) send api diff json data to user , ( using free api )
-// or static qoutes database
+// or static QUOTEs database

@@ -5,15 +5,8 @@ const modaratorSchema = new Schema({
   hrIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   adminIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   employeeIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-  reportedDetailsArray: [
-    {
-      contentId: { type: Schema.Types.ObjectId, ref: "baseContentModel" },
-      submitedId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
-      reportedId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
-    },
-  ],
 });
 
-const modaratorModel = baseUserModel.discriminator("admin", modaratorSchema);
+const modaratorModel = baseUserModel.discriminator(3, modaratorSchema);
 
 export default modaratorModel;

@@ -36,7 +36,8 @@ export const accessTokenValidation = async (req, res, next) => {
       // Check if user exists in the database
       const user = await baseUserModel
         .findById(userId)
-        .select("_id userType userAccess");
+        .select("_id userType userAccess")
+        .lean();
       if (!user) {
         return errResponse(next, "User not found in database", 404);
       }

@@ -57,6 +57,60 @@ export const upateDetailsController = async (req, res, next) => {
   }
 };
 
+// reported content
+export const submitReportedController = async (req, res, next) => {
+  try {
+    const userId = req.Token.id;
+    const { contentId, creatorId } = req.body;
+
+    // Validate content ID
+    const validContentId = isValidId(contentId);
+    if (!validContentId) return errResponse(next, "Invalid content ID", 400);
+
+    // Validate auther ID
+    const validCreatorId = isValidId(creatorId);
+    if (!validCreatorId) return errResponse(next, "Invalid creator ID", 400);
+
+    // Check if content exists
+    const content = await baseContentModel.findById(contentId);
+    if (!content) return errResponse(next, "Content not found", 404);
+
+    const reportDetails = {
+      contentId: validContentId,
+      creatorId: validCreatorId,
+      reportedById: userId,
+    };
+
+    // Find all admins and HRs and put reported details
+    const adminsAndHRs = await baseUserModel.find({
+      userType: { $in: [userTypeConst.ADMIN, userTypeConst.HR] },
+    });
+
+    if (!adminsAndHRs.length)
+      return errResponse(next, "No admins or HRs found", 404);
+
+    // Update field
+    const updatePromises = adminsAndHRs.map((user) =>
+      baseUserModel.findByIdAndUpdate(
+        user._id,
+        { $push: { reportedContentArray: reportDetails } },
+        { new: true }
+      )
+    );
+
+    // Await all updates
+    await Promise.all(updatePromises);
+
+    return okResponse(
+      res,
+      "Reported content successfully updated for admins and HRs"
+    );
+  } catch (error) {
+    console.error(`Error in reportedContentController: ${error.message}`);
+    next(error);
+  }
+};
+
 // get my details
 export const getUserDetailsController = async (req, res, next) => {
   try {

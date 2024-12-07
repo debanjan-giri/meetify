@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { errResponse } from "./reqResRelated.js";
 import mongoose from "mongoose";
+import { contentTypeConst, userTypeConst } from "../models/typeConstant.js";
 
-// password related functions
 export const createHash = async (password) => {
   const saltRounds = 12;
   return await bcrypt.hash(password, saltRounds);
@@ -29,16 +29,6 @@ export const isValidId = (next, id) => {
     return errResponse(next, "Invalid ID format", 400);
   }
   return id.trim();
-};
-
-export const checkUserType = (next, userType) => {
-  const validUserTypes = ["admin", "hr", "employee"];
-
-  if (typeof userType !== "string" || !userType.trim()) {
-    return errResponse(next, "Valid User Type is missing", 400);
-  }
-
-  return validUserTypes.includes(userType.trim());
 };
 
 export function getCleanHashTag(input) {
