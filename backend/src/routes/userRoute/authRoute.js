@@ -10,7 +10,7 @@ import { accessTokenValidation } from "../../middleware/accessTokenValidation.js
 const authRoute = Router();
 
 // auth route
-const { a, b, c, d } = {
+const { a, b, c, d } = { 
   a: "/user/register",
   b: "/user/login",
   c: "/user/delete-account",

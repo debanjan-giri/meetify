@@ -8,7 +8,7 @@ export const likeTypeConst = {
   WOW: 1,
   LIKE: 2,
   FUNNY: 3,
-  HAPPY: 4,
+  HAPPY: 4, 
 };
 
 export const privacyTypeConst = {

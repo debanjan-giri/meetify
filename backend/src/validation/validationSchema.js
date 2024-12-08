@@ -28,7 +28,7 @@ export const isUserTypeInclude = Joi.number()
     "number.base": "User Type must be a number",
     "any.only": "User Type must be one of the following: EMPLOYEE, HR, ADMIN",
   });
-
+ 
 // data
 export const isName = Joi.string().min(3).required().messages({
   "string.empty": "Name is required",

@@ -7,7 +7,7 @@ const baseUserSchema = new Schema(
       type: Number,
       enum: Object.values(userTypeConst),
       required: true,
-      default: userTypeConst.employee,
+      default: userTypeConst.EMPLOYEE,
       index: true,
     },
     name: {

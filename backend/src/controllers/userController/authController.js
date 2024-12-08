@@ -16,13 +16,14 @@ import {
   isEmail,
   isName,
   isPassword,
+  isUrl,
 } from "../../validation/validationSchema.js";
 
 // register
 export const register = async (req, res, next) => {
   try {
     // Validate request data
-    const { email, password, name, company } = inputValidation(
+    const { email, password, name, company, profilePhoto } = inputValidation(
       req,
       next,
       Joi.object({
@@ -30,14 +31,15 @@ export const register = async (req, res, next) => {
         password: isPassword,
         name: isName,
         company: isCompany,
+        profilePhoto: isUrl,
       })
     );
 
     // Check if user already exists
     const existingUser = await baseUserModel
-      .findOne({ email })
-      .select("email")
+      .findOne({ email }, { email: 1 })
       .lean();
+
     if (existingUser) return errResponse(next, "User already exists", 409);
 
     // Hash password
@@ -53,6 +55,7 @@ export const register = async (req, res, next) => {
       company,
       password: hashedPassword,
       userAccess: true,
+      profilePhoto,
       userType: isAdminEmail ? userTypeConst.ADMIN : userTypeConst.EMPLOYEE,
     });
     if (!newUser) return errResponse(next, "User registration failed", 500);
