@@ -1,21 +1,25 @@
 import { Router } from "express";
 import {
-  deleteAccountController,
-  getAccessTokenController,
-  loginController,
-  registerController,
+  deleteAccount,
+  getAccessToken,
+  login,
+  register,
 } from "../../controllers/userController/authController.js";
 import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
 
 const authRoute = Router();
 
-authRoute.post("/user/register", registerController);
-authRoute.post("/user/login", loginController);
-authRoute.delete(
-  "/user/delete-account",
-  accessTokenValidation,
-  deleteAccountController
-);
-authRoute.post("/user/get-access-token", getAccessTokenController);
+// auth route
+const { a, b, c, d } = {
+  a: "/user/register",
+  b: "/user/login",
+  c: "/user/delete-account",
+  d: "/user/get-access-token",
+};
+
+authRoute.post(a, register);
+authRoute.post(b, login);
+authRoute.delete(c, accessTokenValidation, deleteAccount);
+authRoute.post(d, getAccessToken);
 
 export default authRoute;

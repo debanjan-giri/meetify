@@ -1,19 +1,12 @@
 
-
 // import {
-//   typeValidation,
-//   updateDetailsValidation,
-// } from "../../validation/validationSchema.js";
-// import {
-//   checkUserType,
 //   inputValidation,
 //   isValidId,
 // } from "../../utils/utilityFunction.js";
 // import { errResponse, okResponse } from "../../utils/reqResRelated.js";
-// import baseUserModel from "../../models/userModel/baseUserModel.js";
 
-// // update my details
-// export const upateDetailsController = async (req, res, next) => {
+
+// export const upateDetails = async (req, res, next) => {
 //   try {
 //     const userId = req?.Token?.id;
 //     const userType = checkUserType(next, req?.Token?.userType);
@@ -55,8 +48,7 @@
 //   }
 // };
 
-// // reported content
-// export const submitReportedController = async (req, res, next) => {
+// export const submitReported = async (req, res, next) => {
 //   try {
 //     const userId = req.token.id;
 //     const { contentId, creatorId } = req.body;
@@ -109,8 +101,7 @@
 //   }
 // };
 
-// // get my details
-// export const getUserDetailsController = async (req, res, next) => {
+// export const getMyDetails = async (req, res, next) => {
 //   try {
 //     const userId = req?.Token?.id;
 //     const userType = checkUserType(next, req?.Token?.userType);
@@ -140,8 +131,7 @@
 //   }
 // };
 
-// // friend list suggestion
-// export const suffledUserListController = async (req, res, next) => {
+// export const suffledUserList = async (req, res, next) => {
 //   try {
 //     const userId = req?.Token?.id;
 
@@ -176,8 +166,7 @@
 //   }
 // };
 
-// // get employee details by id
-// export const getEmployeeDetailsController = async (req, res, next) => {
+// export const getEmployeeDetails = async (req, res, next) => {
 //   try {
 //     const { employeeId } = req.body;
 
@@ -204,8 +193,7 @@
 //   }
 // };
 
-// // send and accept connection
-// export const handleConnectionController = async (req, res, next) => {
+// export const handleConnection = async (req, res, next) => {
 //   try {
 //     const userId = req?.Token?.id;
 //     const { type } = inputValidation(req, next, typeValidation);
@@ -265,8 +253,7 @@
 //   }
 // };
 
-// // remove connection and unfriend connection
-// export const removeConnectionController = async (req, res, next) => {
+// export const removeConnection = async (req, res, next) => {
 //   try {
 //     const userId = req?.Token?.id;
 //     const { type } = inputValidation(req, next, typeValidation);
@@ -321,8 +308,7 @@
 //   }
 // };
 
-// // request and connection list
-// export const connectionListController = async (req, res, next) => {
+// export const connectionList = async (req, res, next) => {
 //   try {
 //     const userId = req?.Token?.id;
 //     const { type } = inputValidation(req, next, typeValidation);

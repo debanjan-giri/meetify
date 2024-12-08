@@ -14,7 +14,7 @@ import {
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
 import contentReportModel from "../../models/commonModel/contentReportModel.js";
 
-export const updateUserRoleController = async (req, res, next) => {
+export const updateUserRole = async (req, res, next) => {
   try {
     // check user type
     const userType = req.token.userType;
@@ -49,12 +49,12 @@ export const updateUserRoleController = async (req, res, next) => {
 
     return okResponse(res, "User role updated successfully", updatedUser);
   } catch (error) {
-    console.error(`Error in updateUserRoleController : ${error.message}`);
+    console.error(`Error in updateUserRole : ${error.message}`);
     next(error);
   }
 };
 
-export const blockUnblockUserController = async (req, res, next) => {
+export const blockUnblockUser = async (req, res, next) => {
   try {
     // check user type
     const userType = req.token.userType;
@@ -106,12 +106,12 @@ export const blockUnblockUserController = async (req, res, next) => {
 
     return okResponse(res, actionMessage, updatedUser);
   } catch (error) {
-    console.error(`Error in blockUnblockUserController : ${error.message}`);
+    console.error(`Error in blockUnblockUser : ${error.message}`);
     next(error);
   }
 };
 
-export const getAllReportedContentController = async (req, res, next) => {
+export const reportedContent = async (req, res, next) => {
   try {
     const userType = req.token.userType;
 
@@ -136,7 +136,7 @@ export const getAllReportedContentController = async (req, res, next) => {
   }
 };
 
-export const contentRemovingController = async (req, res, next) => {
+export const contentRemoved = async (req, res, next) => {
   try {
     const userType = req.token.userType;
     const creatorId = isValidId(req.body.creatorId);

@@ -1,49 +1,28 @@
 import { Router } from "express";
 import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
 import {
-  blockUnblockUserController,
-  contentRemovingController,
-  getReportedContentController,
-  getTotalUserController,
-  submitReportedController,
-  updateUserRoleController,
+  blockUnblockUser,
+  contentRemoved,
+  reportedContent,
+  updateUserRole,
 } from "../../controllers/userController/modaratorController.js";
 
 const modaratorRoute = Router();
 
+// modarator route
+const { a, b, c, d, e } = {
+  a: "/update-user-role", // admin can update user role
+  b: "/block-unblock-user", // admin or hr can block/unblock user
+  c: "/reported-content", // admin or hr get all reported content
+  d: "/content-removed", // admin or hr can remove content
+  e: "/delete-hashtag", // admin or hr can delete hashtag
+};
+
 // admin
-modaratorRoute.get(
-  "/admin/update-user-role",
-  accessTokenValidation,
-  updateUserRoleController
-);
-modaratorRoute.post(
-  "/admin/block-unblock-user",
-  accessTokenValidation,
-  blockUnblockUserController
-);
-modaratorRoute.post(
-  "/user/mark-report-content",
-  accessTokenValidation,
-  submitReportedController
-);
-modaratorRoute.get(
-  "/admin/get-reported-content",
-  accessTokenValidation,
-  getReportedContentController
-);
-modaratorRoute.post(
-  "/admin/content-removed",
-  accessTokenValidation,
-  contentRemovingController
-);
-
-modaratorRoute.get(
-  "/admin/get-all-type-user",
-  accessTokenValidation,
-  getTotalUserController
-);
-
-modaratorRoute.delete("/admin/delete-hashtag");
+modaratorRoute.get(a, accessTokenValidation, updateUserRole);
+modaratorRoute.post(b, accessTokenValidation, blockUnblockUser);
+modaratorRoute.get(c, accessTokenValidation, reportedContent);
+modaratorRoute.post(d, accessTokenValidation, contentRemoved);
+modaratorRoute.delete(e, accessTokenValidation);
 
 export default modaratorRoute;

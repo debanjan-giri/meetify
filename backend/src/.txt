@@ -1,0 +1,26 @@
+database :
+indexing but not over indexing
+pagination
+projection and limit
+lean
+create single collection without big size
+redis chaching
+redis async job queue
+use type check number not string
+w:majority , w:1
+
+server :
+node cluster
+async await
+gzip compression
+http/2
+create api that less crud operation on db
+promise.all
+
+app :
+react query chaching
+try to create ui that less depends on server
+
+// image
+// before uploading to cdn use pica or broweser img compress
+/// all post will disappear after 30 days

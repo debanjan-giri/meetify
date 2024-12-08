@@ -1,62 +1,34 @@
 import { Router } from "express";
+import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
 // import {
-//   getEmployeeDetailsController,
-//   getUserDetailsController,
-//   handleConnectionController,
-//   removeConnectionController,
-//   suffledUserListController,
-//   upateDetailsController,
+//   connectionList,
+//   getMyDetails,
+//   handleConnection,
+//   removeConnection,
+//   upateDetails,
 // } from "../../controllers/userController/userController.js";
-// import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
 
 const userRoute = Router();
 
-// // update my details
-// userRoute.post(
-//   "/user/update-my-details",
-//   accessTokenValidation,
-//   upateDetailsController
-// );
+// user route
+const { a, b, c, d, e, f, g } = {
+  a: "/details-update", // personal details update
+  b: "/get-details/:id", // get user details by id
+  c: "/upload-profile-photo", // upload profile photo
+  d: "/get-my-details", // get my details
+  e: "/user-list?cursor=abc123&limit=5", // get all user list
+  f: "/send-accept-connection", // send and accept connection
+  g: "/remove-delete-connection", // remove and delete connection
+  h: "/connection-request-list", // get connection list
+};
 
-// // get my details
-// userRoute.get(
-//   "/get-my-details",
-//   accessTokenValidation,
-//   getUserDetailsController
-// );
+// userRoute.post(a, accessTokenValidation, upateDetails);
+// userRoute.get(b, accessTokenValidation);
+// modaratorRoute.get(c, accessTokenValidation);
+// userRoute.post(d, accessTokenValidation, getMyDetails);
+// userRoute.post(e, accessTokenValidation);
+// userRoute.post(f, accessTokenValidation, handleConnection);
+// userRoute.post(g, accessTokenValidation, removeConnection);
+// userRoute.post(h, accessTokenValidation, connectionList);
 
-// // suffled friend list
-// userRoute.get(
-//   "/get-suffled-user-list",
-//   accessTokenValidation,
-//   suffledUserListController
-// );
-
-// // employee details by id
-// userRoute.post(
-//   "/get-employee-details",
-//   accessTokenValidation,
-//   getEmployeeDetailsController
-// );
-
-// // request and accept employee
-// userRoute.post(
-//   "/send-accept-employee",
-//   accessTokenValidation,
-//   handleConnectionController
-// );
-
-// // clear request and unfriend employee
-// userRoute.post(
-//   "/remove-unfd-employee",
-//   accessTokenValidation,
-//   removeConnectionController
-// );
-
-// // request and connection list
-// // userRoute.get(
-// //   "/user/connection-list/:type",
-// //   accessTokenValidation,
-// //   connectionListController
-// // );
 export default userRoute;

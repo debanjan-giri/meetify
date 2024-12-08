@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import { errResponse } from "./reqResRelated.js";
 import mongoose from "mongoose";
-import { contentTypeConst, userTypeConst } from "../models/typeConstant.js";
 
 export const createHash = async (password) => {
   const saltRounds = 12;

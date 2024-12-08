@@ -19,7 +19,7 @@ import {
 } from "../../validation/validationSchema.js";
 
 // register
-export const registerController = async (req, res, next) => {
+export const register = async (req, res, next) => {
   try {
     // Validate request data
     const { email, password, name, company } = inputValidation(
@@ -76,13 +76,13 @@ export const registerController = async (req, res, next) => {
       accesstoken
     );
   } catch (error) {
-    console.error(`Error in registerController : ${error.message}`);
+    console.error(`Error in register : ${error.message}`);
     next(error); // Pass errors to global error handler
   }
 };
 
 // login
-export const loginController = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     // Validate request data
     const { email, password } = inputValidation(
@@ -125,13 +125,13 @@ export const loginController = async (req, res, next) => {
     // Return success response
     return okResponse(res, "Login successful", user, accesstoken);
   } catch (error) {
-    console.error(`Error in loginController : ${error.message}`);
+    console.error(`Error in login : ${error.message}`);
     next(error);
   }
 };
 
 // get access token
-export const getAccessTokenController = async (req, res, next) => {
+export const getAccessToken = async (req, res, next) => {
   try {
     const key = process.env.REFRESH_COOKIES_SECRET;
     const refreshToken = req?.cookies?.[key];
@@ -194,7 +194,7 @@ export const getAccessTokenController = async (req, res, next) => {
 };
 
 // Delete user account
-export const deleteAccountController = async (req, res, next) => {
+export const deleteAccount = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
 
@@ -216,7 +216,7 @@ export const deleteAccountController = async (req, res, next) => {
 
     return okResponse(res, "Account deleted successfully", null);
   } catch (error) {
-    console.error(`Error in deleteAccountController : ${error.message}`);
+    console.error(`Error in deleteAccount : ${error.message}`);
     next(error); // Pass errors to the global error handler
   }
 };
