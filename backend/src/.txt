@@ -7,7 +7,8 @@ create single collection without big size
 redis chaching
 redis async job queue
 use type check number not string
-w:majority , w:1
+always try to one query
+try to avoid populate() 
 
 server :
 node cluster

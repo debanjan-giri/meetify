@@ -24,7 +24,7 @@ const { a, b, c, d, e, f, g } = {
 
 // userRoute.post(a, accessTokenValidation, upateDetails);
 // userRoute.get(b, accessTokenValidation);
-// modaratorRoute.get(c, accessTokenValidation);
+// moderatorRoute.get(c, accessTokenValidation);
 // userRoute.post(d, accessTokenValidation, getMyDetails);
 // userRoute.post(e, accessTokenValidation);
 // userRoute.post(f, accessTokenValidation, handleConnection);

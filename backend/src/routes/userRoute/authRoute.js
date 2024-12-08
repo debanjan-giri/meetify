@@ -1,16 +1,16 @@
 import { Router } from "express";
 import {
-  deleteAccount,
-  getAccessToken,
-  login,
-  register,
+  deleteAccountController as deleteAccount,
+  getAccessTokenController as getAccessToken,
+  loginController as login,
+  registerController as register,
 } from "../../controllers/userController/authController.js";
-import { accessTokenValidation } from "../../middleware/accessTokenValidation.js";
+import { accessTokenValidation as token } from "../../middleware/accessTokenValidation.js";
 
 const authRoute = Router();
 
 // auth route
-const { a, b, c, d } = { 
+const { a, b, c, d } = {
   a: "/user/register",
   b: "/user/login",
   c: "/user/delete-account",
@@ -19,7 +19,7 @@ const { a, b, c, d } = {
 
 authRoute.post(a, register);
 authRoute.post(b, login);
-authRoute.delete(c, accessTokenValidation, deleteAccount);
-authRoute.post(d, getAccessToken);
+authRoute.delete(c, token, deleteAccount);
+authRoute.get(d, getAccessToken);
 
 export default authRoute;

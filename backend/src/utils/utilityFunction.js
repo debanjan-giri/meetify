@@ -21,13 +21,11 @@ export const inputValidation = (req, next, validateSchema) => {
 };
 
 export const isValidId = (next, id) => {
-  if (typeof id !== "string" || !id.trim()) {
-    return errResponse(next, "Valid ID is required", 400);
-  }
-  if (!mongoose.Types.ObjectId.isValid(id.trim())) {
+  const trimmedId = typeof id === "string" ? id.trim() : id;
+  if (!trimmedId || !mongoose.Types.ObjectId.isValid(trimmedId)) {
     return errResponse(next, "Invalid ID format", 400);
   }
-  return id.trim();
+  return trimmedId;
 };
 
 export function getCleanHashTag(input) {

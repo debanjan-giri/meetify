@@ -7,7 +7,7 @@ import authRoute from "./routes/userRoute/authRoute.js";
 import errorHandler from "./middleware/errorHandler.js";
 import { okResponse } from "./utils/reqResRelated.js";
 import cookieParser from "cookie-parser";
-import userRoute from "./routes/userRoute/userRoute.js";
+import moderatorRoute from "./routes/userRoute/moderatorRoute.js";
 
 // express app
 const app = express(); // create express app
@@ -22,7 +22,7 @@ app.use(express.json()); // parse request body as json
 
 // prefix routes
 app.use("/auth", authRoute);
-app.use("/acc", userRoute);
+app.use("/admin", moderatorRoute);
 
 // error handler
 app.use(errorHandler);

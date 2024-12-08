@@ -12,41 +12,46 @@ export const isBoolean = Joi.boolean().required().messages({
   "any.required": "Boolean is required",
 });
 
-export const isString = Joi.string().required().messages({
+export const isId = Joi.string().trim().required().messages({
+  "string.base": "ID must be a string",
+  "any.required": "ID is required",
+});
+
+export const isString = Joi.string().trim().required().messages({
   "string.base": "String must be a string",
   "any.required": "String is required",
 });
 
-export const isUrl = Joi.string().uri().messages({
+export const isUrl = Joi.string().trim().uri().messages({
   "string.uri": "URL must be a valid URL",
 });
 
 // type check
-export const isUserTypeInclude = Joi.number()
-  .valid(...Object.values(userTypeConst))
+export const isUserType = Joi.number()
+  .valid(userTypeConst.ADMIN, userTypeConst.HR, userTypeConst.EMPLOYEE)
   .messages({
     "number.base": "User Type must be a number",
     "any.only": "User Type must be one of the following: EMPLOYEE, HR, ADMIN",
   });
- 
+
 // data
-export const isName = Joi.string().min(3).required().messages({
+export const isName = Joi.string().trim().min(3).required().messages({
   "string.empty": "Name is required",
   "any.required": "Name is required",
 });
 
-export const isCompany = Joi.string().min(3).required().messages({
+export const isCompany = Joi.string().trim().min(3).required().messages({
   "string.empty": "Company is required",
   "any.required": "Company is required",
 });
 
-export const isEmail = Joi.string().email().required().messages({
+export const isEmail = Joi.string().trim().email().required().messages({
   "string.email": "Email must be a valid email address",
   "string.empty": "Email is required",
   "any.required": "Email is required",
 });
 
-export const isPassword = Joi.string().min(6).required().messages({
+export const isPassword = Joi.string().trim().min(6).required().messages({
   "string.base": "Password must be a string",
   "string.empty": "Password cannot be empty",
   "string.min": "Password must be at least 6 characters long",
@@ -62,28 +67,29 @@ export const isdateOfBirth = Joi.date()
     "any.required": "Date of birth is required",
   });
 
-export const isBio = Joi.string().min(10).max(100).messages({
+export const isBio = Joi.string().trim().min(10).max(100).messages({
   "string.empty": "Bio cannot be empty",
   "string.min": "Bio must be at least 10 characters long",
   "string.max": "Bio cannot exceed 100 characters",
 });
 
-export const isDesignation = Joi.string().min(2).max(50).messages({
+export const isDesignation = Joi.string().trim().min(2).max(50).messages({
   "string.min": "Designation must be at least 2 characters long",
   "string.max": "Designation cannot exceed 50 characters",
 });
 
-export const isTitle = Joi.string().required().messages({
+export const isTitle = Joi.string().trim().required().messages({
   "string.empty": "Title is required",
   "any.required": "Title is required",
 });
 
-export const isDescription = Joi.string().messages({
+export const isDescription = Joi.string().trim().messages({
   "string.empty": "Description is required",
   "any.required": "Description is required",
 });
 
 export const isHashTag = Joi.string()
+  .trim()
   .pattern(/^#\w+(\s\w+){2,}$/, "hashtag")
   .messages({
     "string.pattern.name": "Hashtag must start with #",

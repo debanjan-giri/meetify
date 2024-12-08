@@ -3,9 +3,9 @@ import {
   contentTypeConst,
   likeTypeConst,
   privacyTypeConst,
-} from "../typeConstant";
+} from "../typeConstant.js";
 
-const baseContentSchema = new Schema({
+const baseMediaSchema = new Schema({
   creatorId: {
     type: Schema.Types.ObjectId,
     ref: "baseUserModel",
@@ -48,25 +48,22 @@ const baseContentSchema = new Schema({
   ],
   isHashTaged: {
     hastagId: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },
-    validate: {
-      validator: function (value) {
-        if (
-          (this.contentType.includes(contentTypeConst.STATUS) ||
-            this.contentType.includes(contentTypeConst.CHALLENGE)) &&
-          value != null
-        ) {
-          return false;
-        }
-        return true;
-      },
-      message: "Cannot add hashtags to status or challenge content types.",
-    },
   },
+
+  isReported: { type: Boolean, default: false },
+  // if true then dont update reported array
+  reportedArray: {
+    creatorName: { type: String, trim: true },
+    creatorEmail: { type: String, trim: true },
+    reportedByName: { type: String, trim: true },
+    reportedByEmail: { type: String, trim: true },
+  },
+
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date },
 });
 
-baseContentSchema.pre("save", function (next) {
+baseMediaSchema.pre("save", function (next) {
   if (
     this.contentType.includes(contentTypeConst.STATUS) ||
     this.contentType.includes(contentTypeConst.CHALLENGE)
@@ -79,7 +76,7 @@ baseContentSchema.pre("save", function (next) {
 });
 
 // mongodb TTL index
-baseContentSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-const baseContentModel = model("baseContentModel", baseContentSchema);
+baseMediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+const baseMediaModel = model("baseMediaModel", baseMediaSchema);
 
-export default baseContentModel;
+export default baseMediaModel;

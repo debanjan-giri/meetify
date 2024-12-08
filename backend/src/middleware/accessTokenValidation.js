@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { errResponse } from "../utils/reqResRelated.js";
+import { errResponse, serverConsoleErr } from "../utils/reqResRelated.js";
 import { isValidId } from "../utils/utilityFunction.js";
 import baseUserModel from "../models/accUserModel/baseUserModel.js";
 import { userTypeConst } from "../models/typeConstant.js";
@@ -9,7 +9,7 @@ export const accessTokenValidation = async (req, res, next) => {
     const authHeader = req?.headers?.authorization;
 
     // Check for Bearer token in the Authorization header
-    if (!authHeader || !authHeader.startsWith("Bearer")) {
+    if (!authHeader || !authHeader.startsWith("b")) {
       return errResponse(next, "Authorization token missing", 401);
     }
 
@@ -18,7 +18,7 @@ export const accessTokenValidation = async (req, res, next) => {
 
     // Verify token and check if JWT_SECRET is defined
     if (!process.env.ACCESS_TOKEN_SECRET) {
-      return next(new Error("ACCESS_TOKEN_SECRET is not defined"));
+      return serverConsoleErr(next, "ACCESS_TOKEN_SECRET is not defined");
     }
 
     // Verify the token

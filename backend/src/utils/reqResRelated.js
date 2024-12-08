@@ -9,11 +9,19 @@ export const errResponse = (
   next(error);
 };
 
-export const okResponse = (res, message = "", responseData = {}, token) => {
-  return res.status(200).json({
+export const okResponse = (
+  res,
+  message = "",
+  responseData = {},
+  status = 200 // for custom status ( low res payload)
+) => {
+  return res.status(status).json({
     success: true,
     message: message,
     data: responseData,
-    token: token,
   });
+};
+
+export const serverConsoleErr = (next, message) => {
+  return next(new Error(message));
 };

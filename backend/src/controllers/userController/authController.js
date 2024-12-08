@@ -1,14 +1,22 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
-import { errResponse, okResponse } from "../../utils/reqResRelated.js";
+import Joi from "joi";
+import {
+  errResponse,
+  okResponse,
+  serverConsoleErr,
+} from "../../utils/reqResRelated.js";
 
 import {
   generateAccessToken,
-  generateRefreshToken,
+  isRefreshTokenCreated,
 } from "../../utils/tokenRelated.js";
 
-import { createHash, inputValidation } from "../../utils/utilityFunction.js";
+import {
+  createHash,
+  inputValidation,
+  isValidId,
+} from "../../utils/utilityFunction.js";
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
 import { userTypeConst } from "../../models/typeConstant.js";
 import {
@@ -19,8 +27,7 @@ import {
   isUrl,
 } from "../../validation/validationSchema.js";
 
-// register
-export const register = async (req, res, next) => {
+export const registerController = async (req, res, next) => {
   try {
     // Validate request data
     const { email, password, name, company, profilePhoto } = inputValidation(
@@ -46,7 +53,10 @@ export const register = async (req, res, next) => {
     const hashedPassword = await createHash(password);
 
     // admin login
-    const isAdminEmail = email === process.env.ADMIN_EMAIL ? true : false;
+    const isAdminEmail =
+      email === process.env.ADMIN_EMAIL
+        ? userTypeConst.ADMIN
+        : userTypeConst.EMPLOYEE;
 
     // Create new user
     const newUser = await baseUserModel.create({
@@ -54,9 +64,8 @@ export const register = async (req, res, next) => {
       email,
       company,
       password: hashedPassword,
-      userAccess: true,
       profilePhoto,
-      userType: isAdminEmail ? userTypeConst.ADMIN : userTypeConst.EMPLOYEE,
+      userType: isAdminEmail,
     });
     if (!newUser) return errResponse(next, "User registration failed", 500);
 
@@ -64,28 +73,33 @@ export const register = async (req, res, next) => {
     const accesstoken = generateAccessToken(next, newUser);
 
     // send refresh token in cookie
-    const refreshtoken = generateRefreshToken(res, next, newUser);
+    const refreshtoken = isRefreshTokenCreated(res, next, newUser);
 
     if (!accesstoken && !refreshtoken) {
-      await baseUserModel.deleteOne({ _id: newUser._id });
+      await baseUserModel.findByIdAndDelete(newUser._id);
       return errResponse(next, "please register again", 500);
     }
 
+    const setResponse = {
+      name: newUser?.name,
+      email: newUser?.email,
+      company: newUser?.company,
+      profilePhoto: newUser?.profilePhoto,
+      userType: newUser?.userType,
+    };
+
     // Success response
-    return okResponse(
-      res,
-      "User registered successfully",
-      newUser,
-      accesstoken
-    );
+    return okResponse(res, "User registered successfully", {
+      data: setResponse,
+      token: accesstoken,
+    });
   } catch (error) {
-    console.error(`Error in register : ${error.message}`);
+    console.error(`Error in registerController : ${error.message}`);
     next(error); // Pass errors to global error handler
   }
 };
 
-// login
-export const login = async (req, res, next) => {
+export const loginController = async (req, res, next) => {
   try {
     // Validate request data
     const { email, password } = inputValidation(
@@ -99,8 +113,7 @@ export const login = async (req, res, next) => {
 
     // Check if user exists
     const user = await baseUserModel
-      .findOne({ email })
-      .select("email", "password", "userAccess")
+      .findOne({ email }, { userAccess: 1, email: 1, password: 1, _id: 1 })
       .lean();
 
     if (!user)
@@ -111,7 +124,7 @@ export const login = async (req, res, next) => {
       return errResponse(next, "User access is disabled", 401);
 
     // Compare the hashed password
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    const isPasswordMatch = await bcrypt.compare(password, user?.password);
     if (!isPasswordMatch)
       return errResponse(next, "Invalid email number or password", 401);
 
@@ -119,22 +132,30 @@ export const login = async (req, res, next) => {
     const accesstoken = generateAccessToken(next, user);
 
     // send refresh token in cookie
-    const refreshtoken = generateRefreshToken(res, next, user);
+    const refreshtoken = isRefreshTokenCreated(res, next, user);
 
     if (!accesstoken && !refreshtoken) {
       return errResponse(next, "retry login", 500);
     }
 
+    // Remove sensitive fields manually
+    delete user.password;
+    delete user.__v;
+    delete user.userAccess;
+    delete user._id;
+
     // Return success response
-    return okResponse(res, "Login successful", user, accesstoken);
+    return okResponse(res, "Login successful", {
+      data: user,
+      token: accesstoken,
+    });
   } catch (error) {
-    console.error(`Error in login : ${error.message}`);
+    console.error(`Error in loginController : ${error.message}`);
     next(error);
   }
 };
 
-// get access token
-export const getAccessToken = async (req, res, next) => {
+export const getAccessTokenController = async (req, res, next) => {
   try {
     const key = process.env.REFRESH_COOKIES_SECRET;
     const refreshToken = req?.cookies?.[key];
@@ -143,7 +164,7 @@ export const getAccessToken = async (req, res, next) => {
     }
 
     if (!process.env.REFRESH_TOKEN_SECRET) {
-      return next(new Error("REFRESH_TOKEN_SECRET is not defined"));
+      return serverConsoleErr(next, "REFRESH_TOKEN_SECRET is not defined");
     }
 
     // Verify the refresh token
@@ -160,14 +181,17 @@ export const getAccessToken = async (req, res, next) => {
         }
 
         if (!decoded.id) {
-          return errResponse(next, "Invalid refresh token", 401);
+          return serverConsoleErr(next, "token id not found", 401);
         }
+
+        const id = isValidId(next, decoded.id);
 
         // Find the user in the database
         const user = await baseUserModel
-          .findById(decoded.id)
-          .select("_id , userAccess")
+          .findById(id)
+          .select("userAccess , _id")
           .lean();
+
         if (!user) {
           return errResponse(next, "User not found in database", 404);
         }
@@ -180,7 +204,7 @@ export const getAccessToken = async (req, res, next) => {
         const accesstoken = generateAccessToken(next, user);
 
         // send new refresh token in cookie
-        const refreshtoken = generateRefreshToken(res, next, user);
+        const refreshtoken = isRefreshTokenCreated(res, next, user);
 
         if (!accesstoken && !refreshtoken) {
           return errResponse(next, "User not authorized ", 500);
@@ -191,25 +215,23 @@ export const getAccessToken = async (req, res, next) => {
       }
     );
   } catch (error) {
-    console.error(`Error in refreshTokenController : ${error.message}`);
+    console.error(`Error in getAccessTokenController : ${error.message}`);
     next(error); // Pass errors to the global error handler
   }
 };
 
-// Delete user account
-export const deleteAccount = async (req, res, next) => {
+export const deleteAccountController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const userId = req?.token?.id;
 
     // Delete user account
-    const deletedUser = await baseUserModel.findByIdAndDelete(userId);
+    const deletedUser = await baseUserModel
+      .findByIdAndDelete(userId)
+      .select("_name")
+      .lean();
     if (!deletedUser) return errResponse(next, "Failed to delete account", 500);
 
-    // also delete hash tag
-    await hashTagModel.deleteMany({ creatorId: userId });
-
-    // also change content model
-    await baseContentModel.deleteMany({ creatorId });
+    // also delete hash tag and post
 
     // Clear refresh token cookie
     res.clearCookie(process.env.REFRESH_COOKIES_SECRET, {
@@ -219,7 +241,7 @@ export const deleteAccount = async (req, res, next) => {
 
     return okResponse(res, "Account deleted successfully", null);
   } catch (error) {
-    console.error(`Error in deleteAccount : ${error.message}`);
+    console.error(`Error in deleteAccountController : ${error.message}`);
     next(error); // Pass errors to the global error handler
   }
 };
