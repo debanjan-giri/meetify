@@ -11,7 +11,11 @@ import {
 export const getContentByIdController = async (req, res, next) => {
   try {
     const contentId = isValidId(req.body.contentId);
-    const { type: contentType } = inputValidation(req, next, typeValidation);
+    const { type: contentType } = inputValidation(
+      req.body,
+      next,
+      typeValidation
+    );
 
     // Validate the type
     if (
@@ -53,7 +57,7 @@ export const likeUnlikeSubmitController = async (req, res, next) => {
     const userId = req.token.id;
     const contentId = isValidId(req.body.contentId);
     const { type: contentType, likeType } = inputValidation(
-      req,
+      req.body,
       next,
       likeUnlikeSubmitValidation
     );
@@ -146,7 +150,7 @@ export const commentSubmitController = async (req, res, next) => {
     const userId = req.token.id;
     const contentId = isValidId(req.body.contentId);
     const { type: contentType, comment } = inputValidation(
-      req,
+      req.body,
       next,
       commentSubmitValidation
     );
@@ -197,7 +201,11 @@ export const likeUnlikeCommentController = async (req, res, next) => {
     const userId = req.token.id;
     const contentId = isValidId(req.body.contentId);
     const commentId = isValidId(req.body.commentId);
-    const { type: contentType } = inputValidation(req, next, typeValidation);
+    const { type: contentType } = inputValidation(
+      req.body,
+      next,
+      typeValidation
+    );
 
     // Validate content type
     if (
@@ -275,7 +283,7 @@ export const getCommentController = async (req, res, next) => {
 
     // Validate content type (optional, if needed)
     const { type: contentType } = inputValidation(
-      req,
+      req.body,
       next,
       commentSubmitValidation
     );
@@ -325,7 +333,11 @@ export const deleteCommentController = async (req, res, next) => {
     const contentId = isValidId(req.params.contentId);
     const commentId = isValidId(req.body.commentId);
 
-    const { type: contentType } = inputValidation(req, next, typeValidation);
+    const { type: contentType } = inputValidation(
+      req.body,
+      next,
+      typeValidation
+    );
 
     // Validate the contentId and commentId
     if (!contentId || !commentId) {

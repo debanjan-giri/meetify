@@ -8,7 +8,7 @@ export const likeTypeConst = {
   WOW: 1,
   LIKE: 2,
   FUNNY: 3,
-  HAPPY: 4, 
+  HAPPY: 4,
 };
 
 export const privacyTypeConst = {
@@ -35,4 +35,16 @@ export const pollAnsTypeConst = {
   NORMAL: 3,
   YES: 4,
   NO: 5,
+};
+
+export const requestypeConst = {
+  ACCEPT: 1,
+  SEND: 2,
+  DELETE: 3,
+  REJECT: 4,
+};
+
+export const connectionTypeConst = {
+  CONNECTION: 1,
+  REQUESTED: 0,
 };

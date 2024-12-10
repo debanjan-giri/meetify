@@ -13,7 +13,7 @@ export const okResponse = (
   res,
   message = "",
   responseData = {},
-  status = 200 // for custom status ( low res payload)
+  status = 200
 ) => {
   return res.status(status).json({
     success: true,

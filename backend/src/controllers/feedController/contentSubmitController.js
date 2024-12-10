@@ -22,7 +22,7 @@ export const createContentController = async (req, res, next) => {
       challengeTitle,
       privacyType,
       selectedIds,
-    } = inputValidation(req, next, createContentValidation);
+    } = inputValidation(req.body, next, createContentValidation);
 
     // check type
     const allowedTypes = ["post", "status", "challenge"];

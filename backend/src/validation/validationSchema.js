@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { userTypeConst } from "../models/typeConstant.js";
+import { requestypeConst, userTypeConst } from "../models/typeConstant.js";
 
 // data type
 export const isNumber = Joi.number().required().messages({
@@ -28,10 +28,29 @@ export const isUrl = Joi.string().trim().uri().messages({
 
 // type check
 export const isUserType = Joi.number()
+  .required()
   .valid(userTypeConst.ADMIN, userTypeConst.HR, userTypeConst.EMPLOYEE)
   .messages({
     "number.base": "User Type must be a number",
     "any.only": "User Type must be one of the following: EMPLOYEE, HR, ADMIN",
+  });
+
+export const isZeroOneType = Joi.number().required().valid(0, 1).messages({
+  "number.base": " Type must be a number",
+  "any.only": "Type must be one of the following: 0, 1",
+});
+
+export const isRequestype = Joi.number()
+  .required()
+  .valid(
+    requestypeConst.ACCEPT,
+    requestypeConst.REJECT,
+    requestypeConst.DELETE,
+    requestypeConst.SEND
+  )
+  .messages({
+    "number.base": "Connection Type must be a number",
+    "any.only": "Connection Type must be one of the following: 0, 1, 2",
   });
 
 // data
@@ -58,7 +77,7 @@ export const isPassword = Joi.string().trim().min(6).required().messages({
   "any.required": "Password is required",
 });
 
-export const isdateOfBirth = Joi.date()
+export const isDateOfBirth = Joi.date()
   .min("1900-01-01")
   .max("2023-12-31")
   .required()
@@ -67,7 +86,7 @@ export const isdateOfBirth = Joi.date()
     "any.required": "Date of birth is required",
   });
 
-export const isBio = Joi.string().trim().min(10).max(100).messages({
+export const isBio = Joi.string().trim().min(10).max(50).messages({
   "string.empty": "Bio cannot be empty",
   "string.min": "Bio must be at least 10 characters long",
   "string.max": "Bio cannot exceed 100 characters",

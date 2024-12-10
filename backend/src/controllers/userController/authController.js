@@ -31,7 +31,7 @@ export const registerController = async (req, res, next) => {
   try {
     // Validate request data
     const { email, password, name, company, profilePhoto } = inputValidation(
-      req,
+      req.body,
       next,
       Joi.object({
         email: isEmail,
@@ -103,7 +103,7 @@ export const loginController = async (req, res, next) => {
   try {
     // Validate request data
     const { email, password } = inputValidation(
-      req,
+      req.body,
       next,
       Joi.object({
         email: isEmail,
@@ -239,7 +239,7 @@ export const deleteAccountController = async (req, res, next) => {
       secure: true,
     });
 
-    return okResponse(res, "Account deleted successfully", null);
+    return okResponse(res, "Account deleted successfully");
   } catch (error) {
     console.error(`Error in deleteAccountController : ${error.message}`);
     next(error); // Pass errors to the global error handler

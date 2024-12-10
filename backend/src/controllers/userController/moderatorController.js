@@ -4,7 +4,9 @@ import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 import { inputValidation, isValidId } from "../../utils/utilityFunction.js";
 import {
   isBoolean,
+  isEmail,
   isId,
+  isName,
   isUserType,
 } from "../../validation/validationSchema.js";
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
@@ -22,7 +24,7 @@ export const updateUserRoleController = async (req, res, next) => {
 
     // user payload
     const { setUserType, employeeId } = inputValidation(
-      req,
+      req.body,
       next,
       Joi.object({
         setUserType: isUserType,
@@ -40,7 +42,7 @@ export const updateUserRoleController = async (req, res, next) => {
           email: { $ne: process.env.ADMIN_EMAIL },
         },
         { $set: { userType: setUserType } },
-        { new: true, select: "userType -_id" }
+        { new: true, select: "-_id" }
       )
       .lean();
 
@@ -48,7 +50,7 @@ export const updateUserRoleController = async (req, res, next) => {
       return errResponse(next, "User not found", 404);
     }
 
-    return okResponse(res, "User role updated successfully", updatedUser);
+    return okResponse(res, "User role updated successfully");
   } catch (error) {
     console.error(`Error in updateUserRoleController : ${error.message}`);
     next(error);
@@ -60,7 +62,7 @@ export const blockUnblockUserController = async (req, res, next) => {
     // check user type
     const userType = req.token.userType;
     const { employeeId, userAccess } = inputValidation(
-      req,
+      req.body,
       next,
       Joi.object({
         employeeId: isId,
@@ -78,7 +80,7 @@ export const blockUnblockUserController = async (req, res, next) => {
       .findOneAndUpdate(
         { _id: validEmployeeId, email: { $ne: process.env.ADMIN_EMAIL } },
         { $set: { userAccess: !!userAccess } },
-        { new: true, select: "userAccess -_id" }
+        { new: true, select: " -_id" }
       )
       .lean();
 
@@ -91,7 +93,7 @@ export const blockUnblockUserController = async (req, res, next) => {
       ? "User unblocked successfully"
       : "User blocked successfully";
 
-    return okResponse(res, actionMessage, updatedUser);
+    return okResponse(res, actionMessage);
   } catch (error) {
     console.error(`Error in blockUnblockUserController : ${error.message}`);
     next(error);
@@ -114,9 +116,7 @@ export const getReportedContentController = async (req, res, next) => {
     // Find reported content details
     const reportedDetails = await baseMediaModel
       .find({ isReported: true })
-      .select(
-        "_id reportedArray.creatorName reportedArray.creatorEmail reportedArray.reportedByName reportedArray.reportedByEmail"
-      )
+      .select("_id  reportedArray.creatorEmail reportedArray.reportedByEmail")
       .skip((page - 1) * limit)
       .limit(limit)
       .lean();
@@ -125,7 +125,7 @@ export const getReportedContentController = async (req, res, next) => {
       return errResponse(next, "No reported details found", 404);
     }
 
-    return okResponse(res, "Reported details found", reportedDetails);
+    return okResponse(res, "Reported details found");
   } catch (error) {
     console.error(`Error in getReportedContentController: ${error.message}`);
     next(error);
@@ -138,7 +138,7 @@ export const contentRemovedController = async (req, res, next) => {
 
     // Validate input
     const { creatorId, contentId } = inputValidation(
-      req,
+      req.body,
       next,
       Joi.object({
         creatorId: isId,
@@ -191,7 +191,7 @@ export const undoReportedContentController = async (req, res, next) => {
 
     // Validate input
     const { contentId } = inputValidation(
-      req,
+      req.body,
       next,
       Joi.object({
         contentId: isId,
@@ -205,12 +205,11 @@ export const undoReportedContentController = async (req, res, next) => {
       return errResponse(next, "You do not have permission", 403);
     }
 
-    // Update content: set `isReported` to false and clear `reportedArray`
     const updatedContent = await baseMediaModel
       .findByIdAndUpdate(
         isContentId,
         { $set: { isReported: false, reportedArray: {} } },
-        { new: true } // Return the updated document
+        { new: true }
       )
       .select("_id")
       .lean();
@@ -222,6 +221,49 @@ export const undoReportedContentController = async (req, res, next) => {
     return okResponse(res, "Reported status undone successfully");
   } catch (error) {
     console.error(`Error in undoReportedContentController: ${error.message}`);
+    next(error);
+  }
+};
+
+export const submitReportController = async (req, res, next) => {
+  try {
+    const email = req?.Token?.email;
+
+    // Validate input
+    const { contentId } = inputValidation(
+      req.body,
+      next,
+      Joi.object({
+        contentId: isId,
+      })
+    );
+
+    const isContentId = isValidId(next, contentId);
+
+    // Update reported details
+    const updatedContent = await baseMediaModel
+      .findByIdAndUpdate(
+        isContentId,
+        {
+          $set: {
+            isReported: true,
+            reportedArray: {
+              reportedByEmail: email,
+            },
+          },
+        },
+        { new: true }
+      )
+      .select("-_id")
+      .lean();
+
+    if (!updatedContent) {
+      return errResponse(next, "Content not found", 404);
+    }
+
+    return okResponse(res, "Report status updated successfully");
+  } catch (error) {
+    console.error(`Error in submitReportController: ${error.message}`);
     next(error);
   }
 };

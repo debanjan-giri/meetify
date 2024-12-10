@@ -7,8 +7,8 @@ export const createHash = async (password) => {
   return await bcrypt.hash(password, saltRounds);
 };
 
-export const inputValidation = (req, next, validateSchema) => {
-  const { error, value } = validateSchema.validate(req.body, {
+export const inputValidation = (reqData, next, validateSchema) => {
+  const { error, value } = validateSchema.validate(reqData, {
     abortEarly: false,
     allowUnknown: false,
   });

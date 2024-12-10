@@ -50,12 +50,9 @@ const baseMediaSchema = new Schema({
     hastagId: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },
   },
 
-  isReported: { type: Boolean, default: false },
-  // if true then dont update reported array
+  isReported: { type: Boolean, default: false, enum: [true, false] },
   reportedArray: {
-    creatorName: { type: String, trim: true },
     creatorEmail: { type: String, trim: true },
-    reportedByName: { type: String, trim: true },
     reportedByEmail: { type: String, trim: true },
   },
 

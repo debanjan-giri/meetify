@@ -7,7 +7,11 @@ export const createHashTagController = async (req, res, next) => {
     const userId = req?.Token?.id;
     const userType = req?.Token?.userType;
 
-    const { hashTag } = inputValidation(req, next, hashTagSubmitValidation);
+    const { hashTag } = inputValidation(
+      req.body,
+      next,
+      hashTagSubmitValidation
+    );
 
     // create hash tag
     const hashTagDetails = await hashTagModel.create({

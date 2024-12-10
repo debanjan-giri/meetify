@@ -21,6 +21,7 @@ promise.all
 app :
 react query chaching
 try to create ui that less depends on server
+check status code of api isdone or not , then simply update ui data in front end
 
 // image
 // before uploading to cdn use pica or broweser img compress
