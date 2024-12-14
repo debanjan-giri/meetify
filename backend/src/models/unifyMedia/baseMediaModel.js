@@ -89,12 +89,7 @@ baseMediaSchema.pre("save", function (next) {
   }
   next();
 });
-baseMediaModel.index({
-  _id: 1,
-  creatorId: 1,
-  privacyType: 1,
-  allowedPrivacyIds: 1,
-});
+
 
 // mongodb TTL index
 baseMediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

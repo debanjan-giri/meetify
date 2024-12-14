@@ -7,10 +7,9 @@ import {
   isEmail,
   isId,
   isName,
-  isUserType,
 } from "../../validation/validationSchema.js";
-import baseUserModel from "../../models/accUserModel/baseUserModel.js";
 import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
+import { isUserType } from "../../validation/typeCheckSchema.js";
 
 export const updateUserRoleController = async (req, res, next) => {
   try {
