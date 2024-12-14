@@ -1,8 +1,8 @@
 import { Schema, model } from "mongoose";
 import {
-  pollAnsTypeConst,
+  contentTypeConst,
   pollTypeConst,
-  userTypeConst,
+  systemContentConst,
 } from "../typeConstant.js";
 
 const basePollSchema = new Schema(
@@ -13,10 +13,10 @@ const basePollSchema = new Schema(
       required: true,
       index: true,
     },
-    creatorType: {
+    contentType: {
       type: String,
-      enum: Object.values(userTypeConst),
-      default: userTypeConst.EMPLOYEE,
+      enum: Object.values(contentTypeConst),
+      default: contentTypeConst.CONTENT,
       index: true,
       required: true,
     },
@@ -24,46 +24,45 @@ const basePollSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "baseUserModel",
       required: true,
+      index: true,
     },
     question: { type: String, required: true, trim: true },
     ansArray: [
       {
-        ansType: {
-          type: String,
-          enum: Object.values(pollAnsTypeConst),
-          required: true,
-        },
-        userIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+        ans: { type: String, required: true, trim: true },
         count: { type: Number, default: 0 },
+        userPhoto: { type: String, trim: true },
       },
     ],
+    isReported: { type: Boolean, default: false, enum: [true, false] },
+    reportedArray: {
+      creatorEmail: { type: String, trim: true },
+      reportedByEmail: { type: String, trim: true },
+    },
     createdAt: { type: Date, default: Date.now },
     expiresAt: { type: Date },
-    timer: {
-      type: Number,
-      min: 1,
-    },
   },
   { discriminatorKey: "contentType", timestamps: true }
 );
 
 basePollSchema.pre("save", function (next) {
-  // set timer for quiz
-  if (this.contentType === pollTypeConst.QUIZ) {
-    if (!this.timer || this.timer <= 0) {
-      this.timer = 300;
-    }
+  const oneDayInMs = 24 * 60 * 60 * 1000;
+  const isOldPoll =
+    new Date().getTime() - this.createdAt.getTime() > oneDayInMs;
+
+  // 1. system created mood poll ansArray will be deleted after 24 hours
+  if (this.contentType === systemContentConst && isOldPoll) {
+    this.ansArray = [];
   }
 
-  // Set expiresAt for system polls
-  if (
-    this.contentType === pollTypeConst.POLL ||
-    this.contentType === pollTypeConst.QUOTE
-  ) {
-    const oneDayInMs = 24 * 60 * 60 * 1000;
-    this.expiresAt = new Date(this.createdAt.getTime() + oneDayInMs);
-  }
+  //2. user createad poll will delete after 7 days
+  const thirtyDaysInMs = 7 * 24 * 60 * 60 * 1000;
+  const isOldPollForDeletion =
+    new Date().getTime() - this.createdAt.getTime() > thirtyDaysInMs;
 
+  if (this.contentType !== systemContentConst && isOldPollForDeletion) {
+    return this.remove();
+  }
   next();
 });
 

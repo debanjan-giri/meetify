@@ -8,50 +8,6 @@ import {
   typeValidation,
 } from "../../validation/validationSchema";
 
-export const getContentByIdController = async (req, res, next) => {
-  try {
-    const contentId = isValidId(req.body.contentId);
-    const { type: contentType } = inputValidation(
-      req.body,
-      next,
-      typeValidation
-    );
-
-    // Validate the type
-    if (
-      !contentType ||
-      !["post", "status", "challenge", "tagPoll", "tagPost"].includes(
-        contentType
-      )
-    ) {
-      return errResponse(next, "Invalid type provided", 400);
-    }
-
-    // dynamic model
-    const model = ["post", "status", "challenge"].includes(contentType)
-      ? baseContentModel
-      : contentType === "tagPoll"
-      ? hashTagPollModel
-      : hashTagPostModel;
-
-    // check this user own this content in db
-    const isOwnContent = await model.findOne({
-      contendId: contentId,
-    });
-    if (!isOwnContent) return errResponse(next, "data protected", 404);
-
-    // find content is exists
-    const content = await model.findById(contentId);
-    if (!content) return errResponse(next, "Content not found", 404);
-
-    // return content
-    return okResponse(res, "Content fetched successfully", content);
-  } catch (error) {
-    console.error(`Error in getContentByIdController: ${error.message}`);
-    next(error);
-  }
-};
-
 export const likeUnlikeSubmitController = async (req, res, next) => {
   try {
     const userId = req.token.id;

@@ -21,6 +21,7 @@ export const contentTypeConst = {
   CONTENT: 1,
   STATUS: 2,
   CHALLENGE: 3,
+  HASHTAG: 4,
 };
 
 export const pollTypeConst = {
@@ -35,6 +36,8 @@ export const pollAnsTypeConst = {
   NORMAL: 3,
   YES: 4,
   NO: 5,
+  AGREE: 6,
+  DISAGREE: 7,
 };
 
 export const requestypeConst = {
@@ -48,3 +51,11 @@ export const connectionTypeConst = {
   CONNECTION: 1,
   REQUESTED: 0,
 };
+
+export const expirationTypeConst = {
+  NONE: 0,
+  SEVEN_DAYS: 7,
+  THIRTY_DAYS: 30,
+};
+
+export const systemContentConst = 5

@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import {
   contentTypeConst,
+  expirationTypeConst,
   likeTypeConst,
   privacyTypeConst,
 } from "../typeConstant.js";
@@ -22,7 +23,7 @@ const baseMediaSchema = new Schema({
     enum: Object.values(privacyTypeConst),
     default: privacyTypeConst.PUBLIC,
   },
-  customPrivacyIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+  allowedPrivacyIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   title: { type: String, required: true, trim: true },
   photoUrl: { type: String, trim: true },
   totalLike: { type: Number, default: 0 },
@@ -44,6 +45,12 @@ const baseMediaSchema = new Schema({
       totalLike: { type: Number, default: 0 },
       likedByIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
       createdAt: { type: Date, default: Date.now, index: true },
+      nestedCommentArray: [
+        {
+          userId: { type: Schema.Types.ObjectId, ref: "baseUserModel" },
+          comment: { type: String, trim: true },
+        },
+      ],
     },
   ],
   isHashTaged: {
@@ -57,19 +64,36 @@ const baseMediaSchema = new Schema({
   },
 
   createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date },
+
+  expirationType: {
+    type: String,
+    enum: Object.values(expirationTypeConst),
+    default: expirationTypeConst.NONE,
+  },
+
+  expiresAt: { type: Date, required: true },
 });
 
 baseMediaSchema.pre("save", function (next) {
-  if (
-    this.contentType.includes(contentTypeConst.STATUS) ||
-    this.contentType.includes(contentTypeConst.CHALLENGE)
-  ) {
-    this.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  } else {
-    this.expiresAt = null;
+  switch (this.expirationType) {
+    case expirationTypeConst.SEVEN_DAYS:
+      this.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      break;
+    case expirationTypeConst.THIRTY_DAYS:
+      this.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      break;
+    case expirationTypeConst.NONE:
+    default:
+      this.expiresAt = null;
+      break;
   }
   next();
+});
+baseMediaModel.index({
+  _id: 1,
+  creatorId: 1,
+  privacyType: 1,
+  allowedPrivacyIds: 1,
 });
 
 // mongodb TTL index

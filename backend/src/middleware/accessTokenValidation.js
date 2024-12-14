@@ -57,6 +57,8 @@ export const accessTokenValidation = async (req, res, next) => {
         id: user?._id,
         userType: user?.userType,
         email: user?.email,
+        name: user?.name,
+        profilePhoto: user?.profilePhoto,
       };
       next();
     });
