@@ -11,15 +11,8 @@ import {
 const contentRoute = Router();
 // "post", "status", "challenge" , hashtag
 
-const {} = {
-  a: "/user/create-content", // diff content type
-  b: "/user/my-all-content", //  cursor pagination
-  c: "/user/delete-content", // delete by id
-  d: "/user/content-detail-by-id", // get content by id
-};
-
-contentRoute.post(a, token, createContent);
-contentRoute.get(b, token, getAllContent);
-contentRoute.delete(c, token, deleteContent);
-contentRoute.get(d, token, getDetailsById);
+contentRoute.post("/content/create", token, createContent);
+contentRoute.get("/content/my-all", token, getAllContent);
+contentRoute.delete("/content/delete/:contentId", token, deleteContent);
+contentRoute.get("/content/detail/:contentId", token, getDetailsById);
 export default contentRoute;

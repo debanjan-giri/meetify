@@ -1,8 +1,8 @@
-import { contentTypeConst, pollTypeConst } from "../models/typeConstant";
-import basePollModel from "../models/unifyPoll/basePollModel";
-import { isValidId } from "../utils/utilityFunction";
-import { isContentTypeConst } from "../validation/typeCheckSchema";
-import { isId, isString } from "../validation/validationSchema";
+import { contentTypeConst, pollTypeConst } from "../../models/typeConstant";
+import basePollModel from "../../models/unifyPoll/basePollModel";
+import { isValidId } from "../../utils/utilityFunction";
+import { isContentTypeConst } from "../../validation/typeCheckSchema";
+import { isId, isString } from "../../validation/validationSchema";
 
 export const createPollController = async (req, res, next) => {
   try {

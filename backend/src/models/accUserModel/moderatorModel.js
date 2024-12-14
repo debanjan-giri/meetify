@@ -1,5 +1,6 @@
 import { Schema } from "mongoose";
 import baseUserModel from "./baseUserModel.js";
+import { userTypeConst } from "../typeConstant.js";
 
 const moderatorSchema = new Schema({
   hrIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
@@ -7,6 +8,13 @@ const moderatorSchema = new Schema({
   employeeIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
 });
 
-const moderatorModel = baseUserModel.discriminator(3, moderatorSchema);
+// Create a discriminator for ADMIN
+const adminModel = baseUserModel.discriminator(
+  userTypeConst.ADMIN,
+  moderatorSchema
+);
 
-export default moderatorModel;
+// Create a discriminator for HR
+const hrModel = baseUserModel.discriminator(userTypeConst.HR, moderatorSchema);
+
+export { adminModel, hrModel };

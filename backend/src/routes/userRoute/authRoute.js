@@ -9,17 +9,9 @@ import { accessTokenValidation as token } from "../../middleware/accessTokenVali
 
 const authRoute = Router();
 
-// auth route
-const { a, b, c, d } = {
-  a: "/user/register",
-  b: "/user/login",
-  c: "/user/delete-account",
-  d: "/user/get-access-token",
-};
-
-authRoute.post(a, register);
-authRoute.post(b, login);
-authRoute.delete(c, token, deleteAccount);
-authRoute.get(d, getAccessToken);
+authRoute.post("/user/register", register);
+authRoute.post("/user/login", login);
+authRoute.delete("/user/delete-account", token, deleteAccount);
+authRoute.get("/user/get-access-token", getAccessToken);
 
 export default authRoute;

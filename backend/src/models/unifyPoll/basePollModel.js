@@ -26,21 +26,12 @@ const basePollSchema = new Schema(
       required: true,
       index: true,
     },
-    question: { type: String, required: true, trim: true },
-    ansArray: [
-      {
-        ans: { type: String, required: true, trim: true },
-        count: { type: Number, default: 0 },
-        userPhoto: { type: String, trim: true },
-      },
-    ],
     isReported: { type: Boolean, default: false, enum: [true, false] },
     reportedArray: {
       creatorEmail: { type: String, trim: true },
       reportedByEmail: { type: String, trim: true },
     },
     createdAt: { type: Date, default: Date.now },
-    expiresAt: { type: Date },
   },
   { discriminatorKey: "contentType", timestamps: true }
 );
