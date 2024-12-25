@@ -4,17 +4,18 @@ import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 import { inputValidation, isValidId } from "../../utils/utilityFunction.js";
 import {
   isBoolean,
-  isEmail,
   isId,
-  isName,
+  isNumber,
+  isString,
 } from "../../validation/validationSchema.js";
 import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
 import { isUserType } from "../../validation/typeCheckSchema.js";
+import baseUserModel from "../../models/accUserModel/baseUserModel.js";
 
 export const updateUserRoleController = async (req, res, next) => {
   try {
     // check user type
-    const userType = req.token.userType;
+    const { userType } = req.token;
 
     // check user type permission
     if (userType !== userTypeConst.ADMIN) {
@@ -22,26 +23,32 @@ export const updateUserRoleController = async (req, res, next) => {
     }
 
     // user payload
-    const { setUserType, employeeId } = inputValidation(
+    const { setUserType, accountId } = inputValidation(
       req.body,
       next,
       Joi.object({
-        setUserType: isUserType,
-        employeeId: isId,
+        setUserType: isUserType.required(),
+        accountId: isId.required(),
       })
     );
-    const validEmployeeId = isValidId(next, employeeId);
+    const isAccountId = isValidId(next, accountId);
 
-    // Update user role in a single query
+    let updatedData = { userType: setUserType };
+
+    if (setUserType === userTypeConst.HR) {
+      updatedData = {
+        ...updatedData,
+        hrIds: user.hrIds || [],
+        adminIds: user.adminIds || [],
+        employeeIds: user.employeeIds || [],
+      };
+    }
+
     const updatedUser = await baseUserModel
       .findOneAndUpdate(
-        {
-          _id: validEmployeeId,
-          userAccess: true,
-          email: { $ne: process.env.ADMIN_EMAIL },
-        },
-        { $set: { userType: setUserType } },
-        { new: true, select: "-_id" }
+        { _id: isAccountId, email: { $ne: process.env.ADMIN_EMAIL } },
+        { $set: updatedData },
+        { new: true }
       )
       .lean();
 
@@ -59,16 +66,16 @@ export const updateUserRoleController = async (req, res, next) => {
 export const blockUnblockUserController = async (req, res, next) => {
   try {
     // check user type
-    const userType = req.token.userType;
-    const { employeeId, userAccess } = inputValidation(
+    const { userType } = req.token;
+    const { accountId, userAccess } = inputValidation(
       req.body,
       next,
       Joi.object({
-        employeeId: isId,
-        userAccess: isBoolean,
+        accountId: isId.required(),
+        userAccess: isBoolean.required(),
       })
     );
-    const validEmployeeId = isValidId(next, employeeId);
+    const isAccountId = isValidId(next, accountId);
 
     // admin or hr
     if (![userTypeConst.ADMIN, userTypeConst.HR].includes(userType)) {
@@ -77,8 +84,8 @@ export const blockUnblockUserController = async (req, res, next) => {
     // Perform block/unblock action
     const updatedUser = await baseUserModel
       .findOneAndUpdate(
-        { _id: validEmployeeId, email: { $ne: process.env.ADMIN_EMAIL } },
-        { $set: { userAccess: !!userAccess } },
+        { _id: isAccountId, email: { $ne: process.env.ADMIN_EMAIL } },
+        { $set: { userAccess: userAccess } },
         { new: true, select: " -_id" }
       )
       .lean();
@@ -101,30 +108,58 @@ export const blockUnblockUserController = async (req, res, next) => {
 
 export const getReportedContentController = async (req, res, next) => {
   try {
-    const userType = req.token.userType;
+    const { userType } = req.token;
 
-    // admin or hr
+    const { cursor, limit = 10 } = inputValidation(
+      req.query,
+      next,
+      Joi.object({
+        cursor: isString.optional(),
+        limit: isNumber.optional(),
+      })
+    );
+
+    // Validate limit
+    const limitValue = parseInt(limit, 10);
+    if (isNaN(limitValue) || limitValue <= 0 || limitValue > 100) {
+      return errResponse(next, "Invalid limit value", 400);
+    }
+
+    // Admin or HR permissions
     if (![userTypeConst.ADMIN, userTypeConst.HR].includes(userType)) {
       return errResponse(next, "You do not have permission", 403);
     }
 
-    // Add pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    // Build query
+    const query = { isReported: true };
+    if (cursor) {
+      query._id = { $gt: cursor };
+    }
 
-    // Find reported content details
+    // Find reported content details with cursor-based pagination
     const reportedDetails = await baseMediaModel
-      .find({ isReported: true })
-      .select("_id  reportedArray.creatorEmail reportedArray.reportedByEmail")
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .find(query)
+      .select(
+        "_id reportedObj.creatorEmail reportedObj.reportedByEmail creatorId"
+      )
+      .limit(limitValue)
       .lean();
 
     if (!reportedDetails || reportedDetails.length === 0) {
       return errResponse(next, "No reported details found", 404);
     }
 
-    return okResponse(res, "Reported details found");
+    // Return the next cursor
+    const nextCursor =
+      reportedDetails.length === limit
+        ? reportedDetails[reportedDetails.length - 1]._id
+        : null;
+
+    return okResponse(res, {
+      message: "Reported details found",
+      data: reportedDetails,
+      nextCursor,
+    });
   } catch (error) {
     console.error(`Error in getReportedContentController: ${error.message}`);
     next(error);
@@ -133,46 +168,41 @@ export const getReportedContentController = async (req, res, next) => {
 
 export const contentRemovedController = async (req, res, next) => {
   try {
-    const userType = req.token.userType;
+    const { userType } = req.token;
 
     // Validate input
-    const { creatorId, contentId } = inputValidation(
+    const { contentId, accountId } = inputValidation(
       req.body,
       next,
       Joi.object({
-        creatorId: isId,
-        contentId: isId,
+        contentId: isId.required(),
+        accountId: isId.required(),
       })
     );
-
-    const isCreatorId = isValidId(creatorId);
-    const isContentId = isValidId(contentId);
+    const isContentId = isValidId(next, contentId);
+    const isAccountId = isValidId(next, accountId);
 
     // Check permissions
     if (![userTypeConst.ADMIN, userTypeConst.HR].includes(userType)) {
       return errResponse(next, "You do not have permission", 403);
     }
 
-    // Delete content
-    const deletedContent = await baseMediaModel
-      .findByIdAndDelete(isContentId)
-      .select("_id")
-      .lean();
+    // Perform the delete and update operations concurrently
+    const [deletedContent, updatedUser] = await Promise.all([
+      baseMediaModel.findByIdAndDelete(isContentId),
+      baseUserModel.findOneAndUpdate(
+        { _id: isAccountId },
+        { $pull: { myContentIds: contentId } },
+        { new: true }
+      ),
+    ]);
 
+    // Check if content was found and deleted
     if (!deletedContent) {
       return errResponse(next, "Content not found or already deleted", 404);
     }
 
-    // Remove content reference from user
-    const updatedUser = await baseUserModel
-      .findOneAndUpdate(
-        { _id: isCreatorId },
-        { $pull: { myContendIds: isContentId } },
-        { new: true }
-      )
-      .select("_id")
-      .lean();
-
+    // Check if the user exists and content reference was removed
     if (!updatedUser) {
       return errResponse(next, "User not found", 404);
     }
@@ -186,14 +216,14 @@ export const contentRemovedController = async (req, res, next) => {
 
 export const undoReportedContentController = async (req, res, next) => {
   try {
-    const userType = req.token.userType;
+    const { userType } = req.token;
 
     // Validate input
     const { contentId } = inputValidation(
       req.body,
       next,
       Joi.object({
-        contentId: isId,
+        contentId: isId.required(),
       })
     );
 
@@ -204,14 +234,11 @@ export const undoReportedContentController = async (req, res, next) => {
       return errResponse(next, "You do not have permission", 403);
     }
 
-    const updatedContent = await baseMediaModel
-      .findByIdAndUpdate(
-        isContentId,
-        { $set: { isReported: false, reportedArray: {} } },
-        { new: true }
-      )
-      .select("_id")
-      .lean();
+    const updatedContent = await baseMediaModel.findByIdAndUpdate(
+      isContentId,
+      { $set: { isReported: false, reportedObj: {} } },
+      { new: true }
+    );
 
     if (!updatedContent) {
       return errResponse(next, "Content not found", 404);
@@ -220,49 +247,6 @@ export const undoReportedContentController = async (req, res, next) => {
     return okResponse(res, "Reported status undone successfully");
   } catch (error) {
     console.error(`Error in undoReportedContentController: ${error.message}`);
-    next(error);
-  }
-};
-
-export const submitReportController = async (req, res, next) => {
-  try {
-    const email = req?.Token?.email;
-
-    // Validate input
-    const { contentId } = inputValidation(
-      req.body,
-      next,
-      Joi.object({
-        contentId: isId,
-      })
-    );
-
-    const isContentId = isValidId(next, contentId);
-
-    // Update reported details
-    const updatedContent = await baseMediaModel
-      .findByIdAndUpdate(
-        isContentId,
-        {
-          $set: {
-            isReported: true,
-            reportedArray: {
-              reportedByEmail: email,
-            },
-          },
-        },
-        { new: true }
-      )
-      .select("-_id")
-      .lean();
-
-    if (!updatedContent) {
-      return errResponse(next, "Content not found", 404);
-    }
-
-    return okResponse(res, "Report status updated successfully");
-  } catch (error) {
-    console.error(`Error in submitReportController: ${error.message}`);
     next(error);
   }
 };

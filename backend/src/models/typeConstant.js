@@ -13,8 +13,7 @@ export const likeTypeConst = {
 
 export const privacyTypeConst = {
   PUBLIC: 1,
-  CONNECTION: 2,
-  CUSTOM: 3,
+  FRIENDS: 2,
 };
 
 export const contentTypeConst = {
@@ -52,10 +51,15 @@ export const connectionTypeConst = {
   REQUESTED: 0,
 };
 
-export const expirationTypeConst = {
+export const expireTypeConst = {
   NONE: 0,
   SEVEN_DAYS: 7,
   THIRTY_DAYS: 30,
 };
 
-export const systemContentConst = 5
+export const zeoroOneConst = {
+  ZERO: 0,
+  ONE: 1,
+};
+
+export const systemContentConst = 5;

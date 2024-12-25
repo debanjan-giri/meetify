@@ -9,8 +9,8 @@ redis async job queue
 use type check number not string
 always try to one query
 try to avoid populate() 
- .exec(); // Execute in the background
- already token call db details , try use this in schema 
+.exec(); // Execute in the background
+already token call db details , try use this in schema 
 
 server :
 node cluster

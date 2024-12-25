@@ -4,12 +4,14 @@ const cronRoute = Router();
 cronRoute.post("/cron/moodPoll/content"); // every day
 cronRoute.post("/cron/qoute/content"); // every day
 
+
+cronRoute.post("/cron/create-capsule"); // every day
+
 // under development
-// monday and tuesday is for work
-cronRoute.post("/cron/emotional-support/page"); // every wednesday
-cronRoute.post("/cron/time-capsule/open"); // every thursday
+//sunday monday and tuesday and  is for work
+cronRoute.post("/cron/quiz/details"); // every wednesday
+cronRoute.post("/cron/emotional-support/page"); // every thursday
 cronRoute.post("/cron/praise/poll-open"); // every friday
 cronRoute.post("/cron/match/details"); // every saturday
-cronRoute.post("/cron/quiz/details"); // every sunday
 
 export default cronRoute;

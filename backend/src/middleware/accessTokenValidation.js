@@ -54,11 +54,10 @@ export const accessTokenValidation = async (req, res, next) => {
 
       // Attach user data to request for further use
       req.token = {
-        id: user?._id,
+        userId: user?._id,
         userType: user?.userType,
         email: user?.email,
-        name: user?.name,
-        profilePhoto: user?.profilePhoto,
+        myConnectionIds: user?.myConnectionIds,
       };
       next();
     });

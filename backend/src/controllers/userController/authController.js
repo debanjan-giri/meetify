@@ -18,7 +18,7 @@ import {
   isValidId,
 } from "../../utils/utilityFunction.js";
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
-import { userTypeConst } from "../../models/typeConstant.js";
+import { contentTypeConst, userTypeConst } from "../../models/typeConstant.js";
 import {
   isCompany,
   isEmail,
@@ -26,76 +26,92 @@ import {
   isPassword,
   isUrl,
 } from "../../validation/validationSchema.js";
+import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
+import basePollModel from "../../models/unifyPoll/basePollModel.js";
+import hashTagModel from "../../models/hashTagModel.js";
 
 export const registerController = async (req, res, next) => {
   try {
     // Validate request data
-    const { email, password, name, company, profilePhoto } = inputValidation(
+    const { email, password, name, company, photoUrl } = inputValidation(
       req.body,
       next,
       Joi.object({
-        email: isEmail,
-        password: isPassword,
-        name: isName,
-        company: isCompany,
-        profilePhoto: isUrl,
+        email: isEmail.required(),
+        password: isPassword.required(),
+        name: isName.required(),
+        company: isCompany.required(),
+        photoUrl: isUrl,
       })
     );
 
-    // Check if user already exists
-    const existingUser = await baseUserModel
-      .findOne({ email }, { email: 1 })
-      .lean();
-
-    if (existingUser) return errResponse(next, "User already exists", 409);
-
-    // Hash password
-    const hashedPassword = await createHash(password);
-
     // admin login
-    const isAdminEmail =
+    const isAdminUserType =
       email === process.env.ADMIN_EMAIL
         ? userTypeConst.ADMIN
         : userTypeConst.EMPLOYEE;
 
-    // Create new user
-    const newUser = await baseUserModel.create({
+    // Hash password
+    const hashedPassword = await createHash(password);
+
+    // Prepare user data
+    const userData = {
       name,
       email,
       company,
       password: hashedPassword,
-      profilePhoto,
-      userType: isAdminEmail,
-    });
-    if (!newUser) return errResponse(next, "User registration failed", 500);
-
-    // Generate JWT token
-    const accesstoken = generateAccessToken(next, newUser);
-
-    // send refresh token in cookie
-    const refreshtoken = isRefreshTokenCreated(res, next, newUser);
-
-    if (!accesstoken && !refreshtoken) {
-      await baseUserModel.findByIdAndDelete(newUser._id);
-      return errResponse(next, "please register again", 500);
-    }
-
-    const setResponse = {
-      name: newUser?.name,
-      email: newUser?.email,
-      company: newUser?.company,
-      profilePhoto: newUser?.profilePhoto,
-      userType: newUser?.userType,
+      photoUrl,
+      userType: isAdminUserType,
     };
 
-    // Success response
-    return okResponse(res, "User registered successfully", {
-      data: setResponse,
-      token: accesstoken,
-    });
+    if (isAdminUserType === userTypeConst.ADMIN) {
+      userData.hrIds = [];
+      userData.adminIds = [];
+      userData.employeeIds = [];
+    }
+
+    // Find existing user or create a new one
+    const newUser = await baseUserModel.findOneAndUpdate(
+      { email },
+      {
+        $setOnInsert: userData,
+      },
+      {
+        new: true,
+        upsert: true,
+        rawResult: true,
+      }
+    );
+
+    if (!newUser.lastErrorObject.updatedExisting) {
+      const accessToken = generateAccessToken(next, newUser.value);
+      const refreshToken = isRefreshTokenCreated(res, next, newUser.value);
+
+      if (!accessToken || !refreshToken) {
+        await baseUserModel.findByIdAndDelete(newUser.value._id);
+        return errResponse(next, "Please register again", 500);
+      }
+
+      const response = {
+        id: newUser.value._id,
+        name: newUser.value.name,
+        email: newUser.value.email,
+        company: newUser.value.company,
+        photoUrl: newUser.value.profilePhoto,
+        userType: newUser.value.userType,
+      };
+
+      // Success response
+      return okResponse(res, "User registered successfully", {
+        data: response,
+        token: accessToken,
+      });
+    } else {
+      return errResponse(next, "User already exists", 409);
+    }
   } catch (error) {
     console.error(`Error in registerController : ${error.message}`);
-    next(error); // Pass errors to global error handler
+    next(error);
   }
 };
 
@@ -106,47 +122,52 @@ export const loginController = async (req, res, next) => {
       req.body,
       next,
       Joi.object({
-        email: isEmail,
-        password: isPassword,
+        email: isEmail.required(),
+        password: isPassword.required(),
       })
     );
 
     // Check if user exists
-    const user = await baseUserModel
+    const userDetails = await baseUserModel
       .findOne({ email }, { userAccess: 1, email: 1, password: 1, _id: 1 })
       .lean();
 
-    if (!user)
-      return errResponse(next, "Invalid email number or password", 401);
-
-    // check user access
-    if (!user?.userAccess)
-      return errResponse(next, "User access is disabled", 401);
-
+    if (!userDetails || !userDetails.userAccess) {
+      return errResponse(
+        next,
+        `${
+          !userDetails.userAccess
+            ? "user access is disabled"
+            : "please register"
+        }`,
+        401
+      );
+    }
     // Compare the hashed password
-    const isPasswordMatch = await bcrypt.compare(password, user?.password);
+    const isPasswordMatch = await bcrypt.compare(
+      password,
+      userDetails?.password
+    );
     if (!isPasswordMatch)
       return errResponse(next, "Invalid email number or password", 401);
 
     // Generate JWT token
-    const accesstoken = generateAccessToken(next, user);
+    const accesstoken = generateAccessToken(next, userDetails);
 
     // send refresh token in cookie
-    const refreshtoken = isRefreshTokenCreated(res, next, user);
+    const refreshtoken = isRefreshTokenCreated(res, next, userDetails);
 
-    if (!accesstoken && !refreshtoken) {
+    if (!accesstoken || !refreshtoken) {
       return errResponse(next, "retry login", 500);
     }
 
     // Remove sensitive fields manually
-    delete user.password;
-    delete user.__v;
-    delete user.userAccess;
-    delete user._id;
+    delete userDetails.password;
+    delete userDetails.__v;
 
     // Return success response
     return okResponse(res, "Login successful", {
-      data: user,
+      data: userDetails,
       token: accesstoken,
     });
   } catch (error) {
@@ -184,27 +205,27 @@ export const getAccessTokenController = async (req, res, next) => {
           return serverConsoleErr(next, "token id not found", 401);
         }
 
-        const id = isValidId(next, decoded.id);
+        const userId = isValidId(next, decoded.id);
 
         // Find the user in the database
-        const user = await baseUserModel
-          .findById(id)
+        const userDetails = await baseUserModel
+          .findById(userId)
           .select("userAccess , _id")
           .lean();
 
-        if (!user) {
+        if (!userDetails) {
           return errResponse(next, "User not found in database", 404);
         }
 
-        if (!user?.userAccess) {
+        if (!userDetails?.userAccess) {
           return errResponse(next, "User access is disabled", 401);
         }
 
         // Generate JWT token
-        const accesstoken = generateAccessToken(next, user);
+        const accesstoken = generateAccessToken(next, userDetails);
 
         // send new refresh token in cookie
-        const refreshtoken = isRefreshTokenCreated(res, next, user);
+        const refreshtoken = isRefreshTokenCreated(res, next, userDetails);
 
         if (!accesstoken && !refreshtoken) {
           return errResponse(next, "User not authorized ", 500);
@@ -216,22 +237,32 @@ export const getAccessTokenController = async (req, res, next) => {
     );
   } catch (error) {
     console.error(`Error in getAccessTokenController : ${error.message}`);
-    next(error); // Pass errors to the global error handler
+    next(error);
   }
 };
 
 export const deleteAccountController = async (req, res, next) => {
   try {
-    const userId = req?.token?.id;
+    const { id: userId } = req?.token || {};
+    if (!userId) return errResponse(next, "User not authenticated", 401);
 
-    // Delete user account
-    const deletedUser = await baseUserModel
-      .findByIdAndDelete(userId)
-      .select("_name")
-      .lean();
-    if (!deletedUser) return errResponse(next, "Failed to delete account", 500);
+    // Perform delete operations concurrently
+    const deletePromises = [
+      baseUserModel.findByIdAndDelete(userId),
+      baseMediaModel.deleteMany({ creatorId: userId }),
+      basePollModel.deleteMany({ creatorId: userId }),
+      hashTagModel.deleteMany({ creatorId: userId }),
+      baseMediaModel.deleteMany({ contentType: contentTypeConst.HASHTAG }),
+      basePollModel.deleteMany({ contentType: contentTypeConst.HASHTAG }),
+    ];
 
-    // also delete hash tag and post
+    // Wait for all delete operations to complete
+    const [deletedUser] = await Promise.all(deletePromises);
+
+    // Check if user deletion was successful
+    if (!deletedUser) {
+      return errResponse(next, "Failed to delete account", 500);
+    }
 
     // Clear refresh token cookie
     res.clearCookie(process.env.REFRESH_COOKIES_SECRET, {
@@ -241,7 +272,7 @@ export const deleteAccountController = async (req, res, next) => {
 
     return okResponse(res, "Account deleted successfully");
   } catch (error) {
-    console.error(`Error in deleteAccountController : ${error.message}`);
-    next(error); // Pass errors to the global error handler
+    console.error(`Error in deleteAccountController: ${error.message}`);
+    next(error);
   }
 };

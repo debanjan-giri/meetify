@@ -25,12 +25,18 @@ const baseUserSchema = new Schema(
       trim: true,
       lowercase: true,
       unique: true, // Ensures no duplicate emails
+
       index: true, // Fast lookup
     },
     password: { type: String, required: true, select: false }, // Excluded from query results
 
-    profilePhoto: { type: String, trim: true },
+    photoUrl: { type: String, trim: true },
     dateOfBirth: { type: String, trim: true },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      default: "NA",
+    },
 
     // Employment Information
     company: {
@@ -45,10 +51,18 @@ const baseUserSchema = new Schema(
     bio: { type: String, trim: true },
 
     // Relationships
-    myHashTagIds: [{ type: Schema.Types.ObjectId, ref: "hashTagListModel" }],
-    myContendIds: [{ type: Schema.Types.ObjectId, ref: "baseContentModel" }],
-    myConnectionIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
-    myFdRequestIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
+    myHashTagIds: [
+      { type: Schema.Types.ObjectId, ref: "hashTagListModel", index: true },
+    ],
+    myContentIds: [
+      { type: Schema.Types.ObjectId, ref: "baseContentModel", index: true },
+    ],
+    myConnectionIds: [
+      { type: Schema.Types.ObjectId, ref: "baseUserModel", index: true },
+    ],
+    myFdRequestIds: [
+      { type: Schema.Types.ObjectId, ref: "baseUserModel", index: true },
+    ],
 
     // Moods History
     moodsHistoryArray: [
@@ -73,6 +87,8 @@ const baseUserSchema = new Schema(
     toObject: { transform: omitSensitiveFields },
   }
 );
+
+baseUserSchema.index({ userType: 1, _id: 1 });
 
 const baseUserModel = model("baseUserModel", baseUserSchema);
 export default baseUserModel;

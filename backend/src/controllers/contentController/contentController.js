@@ -1,10 +1,20 @@
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
-import baseContentModel from "../../models/feedContentModel/baseContentModel.js";
+import {
+  contentTypeConst,
+  expireTypeConst,
+  privacyTypeConst,
+} from "../../models/typeConstant.js";
+import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
 import { errResponse, okResponse } from "../../utils/reqResRelated.js";
-import { inputValidation } from "../../utils/utilityFunction.js";
+import {
+  getExpirationDate,
+  inputValidation,
+  isValidId,
+  removeEmptyValues,
+} from "../../utils/utilityFunction.js";
 import {
   isContentTypeConst,
-  isExpirationTypeConst,
+  isExpireTypeConst,
   isPrivacyTypeConst,
 } from "../../validation/typeCheckSchema.js";
 import {
@@ -16,33 +26,28 @@ import {
 
 export const createContentController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const { userId } = req?.token;
 
     // Validate input
     const validatedData = inputValidation(
       req.body,
       next,
       Joi.object({
-        title: isTitle.required(), // required
+        title: isTitle.required(),
         description: isDescription.optional(),
         photoUrl: isUrl.optional(),
-        contentType: isContentTypeConst.required(), // required
-        privacyType: isPrivacyTypeConst.required(), // required
-        allowedIds: Joi.array().items(isId).optional(), // ensure valid ObjectId array
+        contentType: isContentTypeConst.required(),
+        privacyType: isPrivacyTypeConst.required(),
         hashTagedId: isId.optional(),
-        expirationType: isExpirationTypeConst.required(),
+        expireType: isExpireTypeConst.required(),
       })
     );
 
-    // Filter out undefined, null, or empty values
-    const updatePayload = Object.fromEntries(
-      Object.entries(validatedData).filter(
-        ([_, value]) => value !== undefined && value !== null && value !== ""
-      )
-    );
+    // Filter out empty values
+    const payload = removeEmptyValues(validatedData);
 
-    // Check for missing fields
-    if (!Object.keys(updatePayload).length > 0) {
+    // Check if no valid fields provided
+    if (!Object.keys(payload).length) {
       return errResponse(
         next,
         "No valid fields provided for creating content",
@@ -50,23 +55,63 @@ export const createContentController = async (req, res, next) => {
       );
     }
 
-    // Add creator ID
-    updatePayload.creatorId = userId;
+    // Build expiration date based on expiration type
+    const expirationDate = getExpirationDate(payload?.expireType);
+    const expiresAt =
+      payload.contentType === contentTypeConst.STATUS ||
+      payload.contentType === contentTypeConst.CHALLENGE
+        ? new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours for STATUS or CHALLENGE
+        : expirationDate;
+
+    if (payload.contentType === contentTypeConst.STATUS && !payload.photoUrl) {
+      return errResponse(next, "Photo URL is required for status", 400);
+    }
+
+    // Initialize base content payload
+    const basePayload = {
+      creatorId: userId,
+      contentType: payload.contentType,
+      title: payload.title,
+      description:
+        payload.contentType === contentTypeConst.STATUS
+          ? ""
+          : payload.description,
+      photoUrl: payload.photoUrl,
+      privacyType:
+        payload.privacyType === contentTypeConst.HASHTAG
+          ? privacyTypeConst.PUBLIC
+          : payload.privacyType,
+      expiresAt,
+    };
 
     // Create the content document
-    const content = await baseMediaModel.create(updatePayload);
+    const content = await baseMediaModel.create(basePayload);
 
     if (!content) {
       return errResponse(next, "Content not created", 400);
     }
 
+    // Check if hashtag update is required
+    if (
+      payload.contentType === contentTypeConst.HASHTAG &&
+      payload.hashTagedId
+    ) {
+      await hashTagModel.findByIdAndUpdate(
+        payload.hashTagedId,
+        {
+          $push: {
+            contentArray: { creatorId: userId, contentId: content._id },
+          },
+        },
+        { new: true }
+      );
+    }
+
     // Update the user's model with the created content ID
-    await baseUserModel
-      .findByIdAndUpdate(userId, {
-        $push: { myConnectionIds: content._id },
-      })
-      .select("")
-      .lean();
+    await baseUserModel.updateOne(
+      { _id: userId },
+      { $push: { myContentIds: content._id } }
+    );
 
     // Respond with success
     return okResponse(res, "Content created successfully");
@@ -78,7 +123,7 @@ export const createContentController = async (req, res, next) => {
 
 export const getAllContentController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const { userId } = req?.token;
     const { cursor, limit = 10 } = inputValidation(
       req.query,
       next,
@@ -88,13 +133,15 @@ export const getAllContentController = async (req, res, next) => {
       })
     );
 
+    const isValidCursor = isValidId(next, cursor);
+
     // Validate limit
     const pageSize = Math.min(parseInt(limit, 10) || 10, 100);
 
     // Build query
     const query = { creatorId: userId };
-    if (cursor) {
-      query.createdAt = { $lt: new Date(cursor) };
+    if (isValidCursor) {
+      query.createdAt = { $lt: new Date(isValidCursor) };
     }
 
     // Fetch content

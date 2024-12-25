@@ -14,4 +14,4 @@ authRoute.post("/user/login", login);
 authRoute.delete("/user/delete-account", token, deleteAccount);
 authRoute.get("/user/get-access-token", getAccessToken);
 
-export default authRoute;
+export default authRoute; 

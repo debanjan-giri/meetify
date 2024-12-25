@@ -22,8 +22,8 @@ const baseMediaSchema = new Schema({
     type: String,
     enum: Object.values(privacyTypeConst),
     default: privacyTypeConst.PUBLIC,
+    index: true,
   },
-  allowedPrivacyIds: [{ type: Schema.Types.ObjectId, ref: "baseUserModel" }],
   title: { type: String, required: true, trim: true },
   photoUrl: { type: String, trim: true },
   totalLike: { type: Number, default: 0 },
@@ -53,43 +53,20 @@ const baseMediaSchema = new Schema({
       ],
     },
   ],
-  isHashTaged: {
-    hastagId: { type: Schema.Types.ObjectId, ref: "hashTagListModel" },
+  isHashTagContentId: {
+    type: Schema.Types.ObjectId,
+    ref: "hashTagListModel",
+    index: true,
   },
 
   isReported: { type: Boolean, default: false, enum: [true, false] },
-  reportedArray: {
-    creatorEmail: { type: String, trim: true },
+  reportedObj: {
+    reportedByName: { type: String, trim: true },
     reportedByEmail: { type: String, trim: true },
   },
-
   createdAt: { type: Date, default: Date.now },
-
-  expirationType: {
-    type: String,
-    enum: Object.values(expirationTypeConst),
-    default: expirationTypeConst.NONE,
-  },
-
   expiresAt: { type: Date, required: true },
 });
-
-baseMediaSchema.pre("save", function (next) {
-  switch (this.expirationType) {
-    case expirationTypeConst.SEVEN_DAYS:
-      this.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-      break;
-    case expirationTypeConst.THIRTY_DAYS:
-      this.expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      break;
-    case expirationTypeConst.NONE:
-    default:
-      this.expiresAt = null;
-      break;
-  }
-  next();
-});
-
 
 // mongodb TTL index
 baseMediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

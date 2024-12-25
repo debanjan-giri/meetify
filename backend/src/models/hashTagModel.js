@@ -6,6 +6,9 @@ const hashTagSchema = new Schema({
     ref: "baseUserModel",
     required: true,
   },
+
+  photoUrl: { type: String, trim: true },
+
   hashTagName: {
     type: String,
     required: true,
@@ -19,12 +22,6 @@ const hashTagSchema = new Schema({
           return value.startsWith("#");
         },
         message: "HashTag name must start with a '#' symbol.",
-      },
-      {
-        validator: function (value) {
-          return value.length > 1;
-        },
-        message: "invalid hashTag name",
       },
     ],
   },

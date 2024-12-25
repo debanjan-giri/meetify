@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { errResponse } from "./reqResRelated.js";
 import mongoose from "mongoose";
+import { expireTypeConst } from "../models/typeConstant.js";
 
 export const createHash = async (password) => {
   const saltRounds = 12;
@@ -21,7 +22,7 @@ export const inputValidation = (reqData, next, validateSchema) => {
 };
 
 export const isValidId = (next, id) => {
-  const trimmedId = typeof id === "string" ? id.trim() : id;
+  const trimmedId = typeof id === "string" ? id.trim() : null;
   if (!trimmedId || !mongoose.Types.ObjectId.isValid(trimmedId)) {
     return errResponse(next, "Invalid ID format", 400);
   }
@@ -34,4 +35,24 @@ export function getCleanHashTag(input) {
   }
   const match = input.match(/^#[a-zA-Z0-9_]+/);
   return match ? match[0] : null;
+}
+
+export function getExpirationDate(expireType) {
+  switch (expireType) {
+    case expireTypeConst.SEVEN_DAYS:
+      return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    case expireTypeConst.THIRTY_DAYS:
+      return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    case expireTypeConst.NONE:
+    default:
+      return undefined;
+  }
+}
+
+export function removeEmptyValues(obj) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(
+      ([_, value]) => value !== undefined && value !== null && value !== ""
+    )
+  );
 }

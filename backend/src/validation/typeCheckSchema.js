@@ -1,10 +1,11 @@
 import Joi from "joi";
 import {
   contentTypeConst,
-  expirationTypeConst,
+  expireTypeConst,
   privacyTypeConst,
   requestypeConst,
   userTypeConst,
+  zeoroOneConst,
 } from "../models/typeConstant.js";
 
 export const isUserType = Joi.number()
@@ -14,10 +15,12 @@ export const isUserType = Joi.number()
     "any.only": "User Type must be one of the following: EMPLOYEE, HR, ADMIN",
   });
 
-export const isZeroOneType = Joi.number().valid(0, 1).messages({
-  "number.base": " Type must be a number",
-  "any.only": "Type must be one of the following: 0, 1",
-});
+export const isZeroOneType = Joi.number()
+  .valid(zeoroOneConst.ONE, zeoroOneConst.ZERO)
+  .messages({
+    "number.base": " Type must be a number",
+    "any.only": "Type must be one of the following: 0, 1",
+  });
 
 export const isRequestype = Joi.number()
   .valid(
@@ -26,7 +29,7 @@ export const isRequestype = Joi.number()
     requestypeConst.DELETE,
     requestypeConst.SEND
   )
-  .messages({ 
+  .messages({
     "number.base": "Connection Type must be a number",
     "any.only": "Connection Type must be one of the following: 0, 1, 2",
   });
@@ -46,23 +49,20 @@ export const isContentTypeConst = Joi.number()
 export const isPrivacyTypeConst = Joi.number()
   .valid(
     privacyTypeConst.PUBLIC,
-    privacyTypeConst.CONNECTION,
-    privacyTypeConst.CUSTOM
+    privacyTypeConst.FRIENDS,
   )
   .messages({
     "number.base": "Privacy Type must be a number",
     "any.only": "Privacy Type must be one of the following: 0, 1, 2",
   });
 
-export const isExpirationTypeConst = Joi.number()
+export const isExpireTypeConst = Joi.number()
   .valid(
-    expirationTypeConst.NONE,
-    expirationTypeConst.SEVEN_DAYS,
-    expirationTypeConst.THIRTY_DAYS
+    expireTypeConst.NONE,
+    expireTypeConst.SEVEN_DAYS,
+    expireTypeConst.THIRTY_DAYS
   )
   .messages({
     "number.base": "Privacy Type must be a number",
-    "any.only": "Privacy Type must be one of the following: 0,7,30", 
+    "any.only": "Privacy Type must be one of the following: 0,7,30",
   });
-
-  export const isPollTypeConst = Joi.number().valid

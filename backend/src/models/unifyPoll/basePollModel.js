@@ -27,7 +27,7 @@ const basePollSchema = new Schema(
       index: true,
     },
     isReported: { type: Boolean, default: false, enum: [true, false] },
-    reportedArray: {
+    reportedObj: {
       creatorEmail: { type: String, trim: true },
       reportedByEmail: { type: String, trim: true },
     },

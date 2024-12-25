@@ -6,71 +6,73 @@ import {
 import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 import {
   isBio,
-  isCompany,
-  isRequestype,
   isDateOfBirth,
   isDesignation,
   isId,
   isNumber,
   isString,
   isUrl,
-  isZeroOneType,
+  isName,
 } from "../../validation/validationSchema.js";
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
 import { isRequestypeConst } from "../../models/typeConstant.js";
+import {
+  isRequestype,
+  isZeroOneType,
+} from "../../validation/typeCheckSchema.js";
 
-export const upateDetailsController = async (req, res, next) => {
+export const updateDetailsController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const { userId } = req?.token;
 
-    // Validate request data
+    // Validate request data and directly filter out empty fields
     const validatedData = inputValidation(
       req.body,
       next,
       Joi.object({
-        name: Joi.string().trim(),
-        bio: isBio,
-        company: isCompany,
-        dateOfBirth: isDateOfBirth,
-        designation: isDesignation,
+        name: isName.optional().allow(""),
+        bio: isBio.optional().allow(""),
+        dateOfBirth: isDateOfBirth.optional().allow(""),
+        designation: isDesignation.optional().allow(""),
       })
     );
 
-    // prevent unnecessary updates
+    // Create update payload by omitting undefined or empty values
     const updatePayload = Object.fromEntries(
-      Object.entries(validatedData).filter(
-        ([_, value]) => value !== undefined && value !== null && value !== ""
-      )
+      Object.entries(validatedData).filter(([_, value]) => value)
     );
 
-    // If no valid fields are provided, skip the DB write
+    // Early return if no valid fields are provided
     if (Object.keys(updatePayload).length === 0) {
       return errResponse(next, "No valid fields provided for update", 400);
     }
 
-    // update user details
+    // Update user details in the database
     const updatedUser = await baseUserModel
       .findByIdAndUpdate(userId, updatePayload, { new: true })
-      .select("")
+      .select("name bio dateOfBirth designation")
       .lean();
-    if (!updatedUser)
-      return errResponse(next, "User details update failed", 404);
 
-    // send response
-    return okResponse(res, "User details updated successfully");
+    // Return an error if the update fails
+    if (!updatedUser) {
+      return errResponse(next, "User details update failed", 404);
+    }
+
+    // Send the response
+    return okResponse(res, "User details updated successfully", updatedUser);
   } catch (error) {
-    console.error(`Error in upateDetailsController : ${error.message}`);
+    console.error(`Error in updateDetailsController : ${error.message}`);
     next(error);
   }
 };
 
 export const getDetailsByIdController = async (req, res, next) => {
   try {
-    const { id: employeeId } = inputValidation(
+    const { employeeId } = inputValidation(
       req.params,
       next,
       Joi.object({
-        id: isId,
+        employeeId: isId.required(),
       })
     );
     const isEmployeeId = isValidId(next, employeeId);
@@ -92,25 +94,28 @@ export const getDetailsByIdController = async (req, res, next) => {
 
 export const submitUnsubmitPhotoUrlController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const { userId } = req?.token;
 
-    const { profilePhoto, isSubmit } = inputValidation(
+    const { photoUrl, isSubmit } = inputValidation(
       req.body,
       next,
       Joi.object({
-        profilePhoto: isUrl,
-        isSubmit: isZeroOneType,
+        photoUrl: isUrl,
+        isSubmit: isZeroOneType.required(),
       })
     );
 
+    if (isSubmit === 1 && !photoUrl) {
+      return errResponse(next, "photoUrl is required", 400);
+    }
+
     // Prepare update data
-    const updateData =
-      isSubmit === 1 ? { profilePhoto } : { profilePhoto: null };
+    const updateData = isSubmit === 1 ? { photoUrl } : { photoUrl: null };
 
     // Update user details
     const updatedUser = await baseUserModel
       .findByIdAndUpdate(userId, updateData, { new: true })
-      .select("")
+      .select("_id")
       .lean();
 
     if (!updatedUser) {
@@ -129,14 +134,12 @@ export const submitUnsubmitPhotoUrlController = async (req, res, next) => {
 
 export const getMyDetailsController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const { userId } = req?.token;
 
     // get user details
     const user = await baseUserModel
       .findById(userId)
-      .select(
-        "-myConnectionIds -myContendIds -myFdRequestIds -userAccess -password"
-      )
+      .select("name photoUrl bio company designation userType dateOfBirth")
       .lean();
     if (!user) return errResponse(next, "User not found", 404);
 
@@ -155,8 +158,8 @@ export const getUserListController = async (req, res, next) => {
       req.query,
       next,
       Joi.object({
-        cursor: isString,
-        limit: isNumber,
+        cursor: isString.optional(),
+        limit: isNumber.optional(),
       })
     );
 
@@ -174,7 +177,7 @@ export const getUserListController = async (req, res, next) => {
       .find(query)
       .sort({ _id: 1 })
       .limit(limitValue)
-      .select("name profilePhoto bio")
+      .select("name profilePhoto userType _id")
       .lean();
 
     // If no users are found
@@ -200,23 +203,24 @@ export const getUserListController = async (req, res, next) => {
 export const handleConnectionController = async (req, res, next) => {
   try {
     const userId = req?.Token?.id;
-    const { requestype, employeeId } = inputValidation(
+    const { requestype, accountId } = inputValidation(
       req.body,
       next,
-      Joi.object({ requestype: isRequestype, employeeId: isId })
+      Joi.object({
+        requestype: isRequestype.required(),
+        accountId: isId.required(),
+      })
     );
 
-    const isEmployeeId = isValidId(next, employeeId);
+    const isAccountId = isValidId(next, accountId);
 
-    const updateConnection = async (userId, employeeId, update) => {
+    // send
+    const updateConnection = async (dbId, update) => {
       const updatedUser = await baseUserModel
-        .findByIdAndUpdate(userId, update, { new: true })
-        .select("")
+        .findByIdAndUpdate({ _id: dbId }, update, { new: true, upsert: false })
+        .select("_id")
         .lean();
-      if (!updatedUser) {
-        return false;
-      }
-      return true;
+      return !!updatedUser;
     };
 
     let successMessage = "";
@@ -230,19 +234,19 @@ export const handleConnectionController = async (req, res, next) => {
 
       case isRequestypeConst.ACCEPT:
         update = {
-          $addToSet: { connectionId: isEmployeeId },
-          $pull: { requestId: isEmployeeId },
+          $addToSet: { connectionId: isAccountId },
+          $pull: { requestId: isAccountId },
         };
         successMessage = "Connection request accepted successfully";
         break;
 
       case isRequestypeConst.REJECT:
-        update = { $pull: { requestId: isEmployeeId } };
+        update = { $pull: { requestId: isAccountId } };
         successMessage = "Connection request rejected successfully";
         break;
 
       case isRequestypeConst.DELETE:
-        update = { $pull: { requestId: isEmployeeId } };
+        update = { $pull: { connectionId: isAccountId } };
         successMessage = "Connection request deleted successfully";
         break;
 
@@ -250,13 +254,16 @@ export const handleConnectionController = async (req, res, next) => {
         return errResponse(next, "Invalid request type", 400);
     }
 
-    const updated = await updateConnection(userId, isEmployeeId, update);
+    const dynamicAccId =
+      requestype === isRequestypeConst.SEND ? userId : isAccountId;
+
+    const updated = await updateConnection(dynamicAccId, update);
 
     if (!updated) {
-      return errResponse(next, `${successMessage.split(" ")[0]} failed`, 404);
+      return errResponse(next, "operation failed", 404);
     }
 
-    return okResponse(res, successMessage);
+    return okResponse(res, "operation success");
   } catch (error) {
     console.error(`Error in handleConnectionController: ${error.message}`);
     next(error);
@@ -265,63 +272,133 @@ export const handleConnectionController = async (req, res, next) => {
 
 export const connectedRequestListController = async (req, res, next) => {
   try {
-    const userId = req?.Token?.id;
+    const { userId } = req?.token;
 
     // Validate request data using Joi schema
     const {
       cursor,
       limit = 10,
-      type,
+      listType,
     } = inputValidation(
       req.query,
       next,
       Joi.object({
-        cursor: isString,
-        limit: isNumber,
-        type: isZeroOneType,
+        cursor: isString.optional(),
+        limit: isNumber.optional(),
+        listType: isZeroOneType.required(),
       })
     );
 
-    // Validate 'limit'
-    const limitValue = Math.min(Math.max(parseInt(limit, 10), 1), 100); // Ensure limit is within range
+    // Validate cursor and limit values
+    const validCursor = isValidId(next, cursor);
+    const limitValue = Math.min(Math.max(parseInt(limit, 10), 1), 100);
     if (isNaN(limitValue)) return errResponse(next, "Invalid limit value", 400);
 
-    // Determine query based on 'type'
-    const query = {
-      [`my${type === 1 ? "Connection" : "FdRequest"}Ids`]: userId,
-    };
+    const listField = listType === 1 ? "myConnectionIds" : "myFdRequestIds";
 
-    // Apply cursor-based pagination if provided
-    if (cursor) query._id = { $gt: cursor };
+    // Optimized Aggregation pipeline
+    const user = await baseUserModel.aggregate([
+      { $match: { _id: userId } },
+      {
+        $lookup: {
+          from: "users",
+          let: { connectionIds: `$${listField}` },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $in: ["$_id", "$$connectionIds"] },
+                ...(validCursor && { _id: { $gt: validCursor } }),
+              },
+            },
+            { $project: { name: 1, photoUrl: 1, userType: 1, _id: 1 } },
+            { $sort: { _id: 1 } },
+            { $limit: limitValue + 1 },
+          ],
+          as: "userList",
+        },
+      },
+      {
+        $project: {
+          userList: 1,
+        },
+      },
+    ]);
 
-    // Fetch the user list
-    const userList = await baseUserModel
-      .find(query)
-      .sort({ _id: 1 })
-      .limit(limitValue)
-      .select("name profilePhoto bio")
-      .lean();
-
-    // No users found
-    if (!userList.length) {
-      return okResponse(res, "No users found", { connections: [] });
+    // Check if userList is empty
+    if (!user?.[0]?.userList?.length) {
+      return okResponse(res, "No users found");
     }
 
-    // Get the next cursor (next _id)
-    const nextCursor = userList[userList.length - 1]._id;
+    const userList = user[0].userList;
+    const hasNextPage = userList.length > limitValue;
+    const trimmedUserList = hasNextPage
+      ? userList.slice(0, limitValue)
+      : userList;
+    const nextCursor = hasNextPage
+      ? trimmedUserList[trimmedUserList.length - 1]._id
+      : null;
 
-    // Send response with user data and pagination info
+    const responseKey = listType === 1 ? "connectionIds" : "requestIds";
+
+    // Return the result
     return okResponse(
       res,
-      `${type === 1 ? "Connected" : "Requested"} list fetched successfully`,
+      `${listType === 1 ? "Connected" : "Requested"} list fetched successfully`,
       {
-        connections: userList,
+        [responseKey]: trimmedUserList,
         nextCursor,
-        hasNextPage: userList.length === limitValue, // Check if there are more pages
+        hasNextPage,
       }
     );
   } catch (error) {
     console.error(`Error in connectedRequestListController: ${error.message}`);
-    next(error); // Pass error to next middleware
+    next(error);
+  }
+};
+
+export const submitUnsubmitReportController = async (req, res, next) => {
+  try {
+    const { email, name } = req?.token;
+
+    // Validate input
+    const { contentId, isType } = inputValidation(
+      req.body,
+      next,
+      Joi.object({
+        contentId: isId.required(),
+        isType: isZeroOneType.required(),
+      })
+    );
+
+    const isContentId = isValidId(next, contentId);
+
+    // Determine update fields
+    const update =
+      isType === 1
+        ? {
+            $set: {
+              isReported: true,
+              reportedObj: { reportedByName: name, reportedByEmail: email },
+            },
+          }
+        : {
+            $set: { isReported: false },
+            $unset: { reportedObj: {} },
+          };
+
+    // Update reported details
+    const updatedContent = await baseMediaModel
+      .findByIdAndUpdate(isContentId, update, { new: true, upsert: false })
+      .select("-_id")
+      .lean();
+
+    if (!updatedContent) {
+      return errResponse(next, "Content not found", 404);
+    }
+
+    return okResponse(res, "Report status updated successfully");
+  } catch (error) {
+    console.error(`Error in submitReportController: ${error.message}`);
+    next(error);
   }
 };
