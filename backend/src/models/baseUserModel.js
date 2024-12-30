@@ -1,18 +1,21 @@
 import { Schema, model } from "mongoose";
-import { userTypeConst } from "../typeConstant.js";
+import { userTypeConst } from "../../constant/typeConstant";
 
 const baseUserSchema = new Schema(
   {
-    // User Type
+    userAccess: {
+      type: Boolean,
+      default: false,
+      required: true,
+      select: false,
+    },
     userType: {
       type: Number,
       enum: Object.values(userTypeConst),
       required: true,
       default: userTypeConst.EMPLOYEE,
-      index: true, // Indexed for faster filtering
+      index: true,
     },
-
-    // Personal Information
     name: {
       type: String,
       required: true,
@@ -24,12 +27,10 @@ const baseUserSchema = new Schema(
       required: true,
       trim: true,
       lowercase: true,
-      unique: true, // Ensures no duplicate emails
-
-      index: true, // Fast lookup
+      unique: true,
+      index: true,
     },
-    password: { type: String, required: true, select: false }, // Excluded from query results
-
+    password: { type: String, required: true, select: false },
     photoUrl: { type: String, trim: true },
     dateOfBirth: { type: String, trim: true },
     gender: {
@@ -37,8 +38,6 @@ const baseUserSchema = new Schema(
       enum: ["male", "female"],
       default: "NA",
     },
-
-    // Employment Information
     company: {
       type: String,
       required: true,
@@ -49,57 +48,31 @@ const baseUserSchema = new Schema(
     },
     designation: { type: String, trim: true },
     bio: { type: String, trim: true },
-
-    // Relationships
-    myHashTagIds: [
+    communityId: [
       { type: Schema.Types.ObjectId, ref: "hashTagListModel", index: true },
     ],
-    myContentIds: [
+    contentId: [
       { type: Schema.Types.ObjectId, ref: "baseContentModel", index: true },
     ],
-    myConnectionIds: [
+    connectionId: [
       { type: Schema.Types.ObjectId, ref: "baseUserModel", index: true },
     ],
-    myFdRequestIds: [
+    requestId: [
       { type: Schema.Types.ObjectId, ref: "baseUserModel", index: true },
     ],
-
-    // Moods History
-    moodsHistoryArray: [
+    totalViews: { type: Number, default: 0 },
+    views: [
       {
-        date: { type: Date },
-        mood: { type: String, trim: true },
+        type: Schema.Types.ObjectId,
+        ref: "baseUserModel",
+        unique: true,
       },
     ],
-
-    // Access Control
-    userAccess: {
-      type: Boolean,
-      default: false,
-      required: true,
-      select: false,
-    },
   },
   {
-    discriminatorKey: "userType", // Enables schema inheritance
-    timestamps: true, // Adds createdAt and updatedAt fields
-    toJSON: { transform: omitSensitiveFields },
-    toObject: { transform: omitSensitiveFields },
+    timestamps: true,
   }
 );
 
-baseUserSchema.index({ userType: 1, _id: 1 });
-
 const baseUserModel = model("baseUserModel", baseUserSchema);
 export default baseUserModel;
-
-// Helper to remove sensitive fields from responses
-function omitSensitiveFields(doc, ret) {
-  delete ret.password;
-  delete ret.__v;
-  delete ret.userAccess;
-  delete ret._id;
-  delete ret.createdAt;
-  delete ret.updatedAt;
-  return ret;
-}

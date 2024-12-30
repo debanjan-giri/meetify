@@ -8,7 +8,7 @@ import {
   isNumber,
   isString,
 } from "../../validation/validationSchema.js";
-import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
+import baseContentModel from "../../models/unifyMedia/baseContentModel.js";
 import { isUserType } from "../../validation/typeCheckSchema.js";
 import baseUserModel from "../../models/accUserModel/baseUserModel.js";
 
@@ -137,7 +137,7 @@ export const getReportedContentController = async (req, res, next) => {
     }
 
     // Find reported content details with cursor-based pagination
-    const reportedDetails = await baseMediaModel
+    const reportedDetails = await baseContentModel
       .find(query)
       .select(
         "_id reportedObj.creatorEmail reportedObj.reportedByEmail creatorId"
@@ -189,7 +189,7 @@ export const contentRemovedController = async (req, res, next) => {
 
     // Perform the delete and update operations concurrently
     const [deletedContent, updatedUser] = await Promise.all([
-      baseMediaModel.findByIdAndDelete(isContentId),
+      baseContentModel.findByIdAndDelete(isContentId),
       baseUserModel.findOneAndUpdate(
         { _id: isAccountId },
         { $pull: { myContentIds: contentId } },
@@ -234,7 +234,7 @@ export const undoReportedContentController = async (req, res, next) => {
       return errResponse(next, "You do not have permission", 403);
     }
 
-    const updatedContent = await baseMediaModel.findByIdAndUpdate(
+    const updatedContent = await baseContentModel.findByIdAndUpdate(
       isContentId,
       { $set: { isReported: false, reportedObj: {} } },
       { new: true }

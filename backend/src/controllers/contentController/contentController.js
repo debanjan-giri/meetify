@@ -4,7 +4,7 @@ import {
   expireTypeConst,
   privacyTypeConst,
 } from "../../models/typeConstant.js";
-import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
+import baseContentModel from "../../models/unifyMedia/baseContentModel.js";
 import { errResponse, okResponse } from "../../utils/reqResRelated.js";
 import {
   getExpirationDate,
@@ -85,7 +85,7 @@ export const createContentController = async (req, res, next) => {
     };
 
     // Create the content document
-    const content = await baseMediaModel.create(basePayload);
+    const content = await baseContentModel.create(basePayload);
 
     if (!content) {
       return errResponse(next, "Content not created", 400);
@@ -145,7 +145,7 @@ export const getAllContentController = async (req, res, next) => {
     }
 
     // Fetch content
-    const contentList = await baseMediaModel
+    const contentList = await baseContentModel
       .find(query)
       .sort({ createdAt: -1 })
       .limit(pageSize)
@@ -180,7 +180,7 @@ export const getContentDetailsByIdController = async (req, res, next) => {
     );
 
     // Build the query to fetch content along with privacy checks directly
-    const content = await baseMediaModel
+    const content = await baseContentModel
       .findOne({
         _id: contentId,
         $or: [
@@ -221,7 +221,7 @@ export const deleteContentByIdController = async (req, res, next) => {
     );
 
     // Perform both ownership validation and deletion in one query
-    const content = await baseMediaModel
+    const content = await baseContentModel
       .findOneAndDelete({
         _id: contentId,
         creatorId: userId, // Ensure the user is the owner

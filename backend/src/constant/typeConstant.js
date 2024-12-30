@@ -20,7 +20,7 @@ export const contentTypeConst = {
   CONTENT: 1,
   STATUS: 2,
   CHALLENGE: 3,
-  HASHTAG: 4,
+  COMMUNITY: 4,
 };
 
 export const pollTypeConst = {
@@ -60,6 +60,15 @@ export const expireTypeConst = {
 export const zeoroOneConst = {
   ZERO: 0,
   ONE: 1,
+};
+
+export const actionConst = {
+  CHAT: 1,
+  CAPSULE: 2,
+  CONNECT: 3,
+  NEXT_TIME: 4,
+  LIKE: 5,
+  TEA_BREAK: 6,
 };
 
 export const systemContentConst = 5;

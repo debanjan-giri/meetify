@@ -387,7 +387,7 @@ export const submitUnsubmitReportController = async (req, res, next) => {
           };
 
     // Update reported details
-    const updatedContent = await baseMediaModel
+    const updatedContent = await baseContentModel
       .findByIdAndUpdate(isContentId, update, { new: true, upsert: false })
       .select("-_id")
       .lean();

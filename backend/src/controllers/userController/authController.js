@@ -26,7 +26,7 @@ import {
   isPassword,
   isUrl,
 } from "../../validation/validationSchema.js";
-import baseMediaModel from "../../models/unifyMedia/baseMediaModel.js";
+import baseContentModel from "../../models/unifyMedia/baseContentModel.js";
 import basePollModel from "../../models/unifyPoll/basePollModel.js";
 import hashTagModel from "../../models/hashTagModel.js";
 
@@ -249,10 +249,10 @@ export const deleteAccountController = async (req, res, next) => {
     // Perform delete operations concurrently
     const deletePromises = [
       baseUserModel.findByIdAndDelete(userId),
-      baseMediaModel.deleteMany({ creatorId: userId }),
+      baseContentModel.deleteMany({ creatorId: userId }),
       basePollModel.deleteMany({ creatorId: userId }),
       hashTagModel.deleteMany({ creatorId: userId }),
-      baseMediaModel.deleteMany({ contentType: contentTypeConst.HASHTAG }),
+      baseContentModel.deleteMany({ contentType: contentTypeConst.HASHTAG }),
       basePollModel.deleteMany({ contentType: contentTypeConst.HASHTAG }),
     ];
 

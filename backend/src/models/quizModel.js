@@ -1,7 +1,7 @@
-import { pollTypeConst } from "../typeConstant";
-import basePollModel from "./basePollModel";
+import { model } from "mongoose";
 
-export const quizSchema = new Schema({
+const quizSchema = new Schema({
+  totalQuestion: { type: Number, default: 0 },
   questionsArray: [
     {
       question: { type: String, required: true, trim: true },
@@ -13,15 +13,20 @@ export const quizSchema = new Schema({
       ],
     },
   ],
+
+  setTime: { type: Number, default: 0 },
+
   resultArray: [
     {
       userName: { type: String, required: true, trim: true },
+      userPhoto: { type: String, trim: true },
       score: { type: Number, default: 0 },
     },
   ],
+  expireAt: { type: Date, default: 24 * 60 * 60 * 1000 },
 });
 
-export const quizModel = basePollModel.discriminator(
-  pollTypeConst.QUIZ,
-  quizSchema
-);
+quizSchema.index({ expireAt: 1 }, { expireAfterSeconds: 0 });
+
+const quizModel = model("quizModel", quizSchema);
+export default quizModel;
